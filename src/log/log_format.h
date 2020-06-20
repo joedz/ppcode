@@ -2,6 +2,7 @@
 
 #include "log_event.h"
 
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -13,12 +14,15 @@ namespace ppcode {
 
      class LogFormatterItem {
     public:
+        
         using ptr = std::shared_ptr<LogFormatterItem>;
+        
         LogFormatterItem() = default;
         virtual ~LogFormatterItem() = default;
         virtual std::ostream& stream(std::ostream& ss, LogEvent::ptr event) = 0;
     };
 
+    // 日志格式化器
     class LogFormatter{
     public:
     // 格式化 日志
@@ -39,5 +43,6 @@ namespace ppcode {
         std::string m_pattern;
         bool m_error = false;
         std::vector<LogFormatterItem::ptr> m_items;
+        
     };
 }

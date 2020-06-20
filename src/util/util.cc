@@ -13,7 +13,9 @@ pid_t GetThreadId() {
     return syscall(SYS_gettid);
 }
 
-
+size_t GetPageSize(){
+    return syscall(_SC_PAGE_SIZE);
+}
 
 
 

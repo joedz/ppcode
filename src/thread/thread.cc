@@ -34,20 +34,21 @@ void Thread::SetThreadName(const std::string& name) {
     //pthread_setname_np()
 }
 
-
 void* Thread::run(void *arg) {
     Thread* thread = (Thread*)arg;
+
+    thread->m_isRun.store(true);
 
     t_thread = thread;
     t_Thread_name = thread->m_name;
     thread->m_tid = syscall(SYS_gettid);
     pthread_setname_np(thread->m_threadId, thread->m_name.substr(0, 15).c_str());
-
+    // 智能指针可能被lambda捕获，存放在function对象中，直接调用，可能会产生引用计数问题
     std::function<void()> cb;
     cb.swap(thread->m_cb);
-    
-    // TODO semaphore P
+    thread->m_sem.notify();
     cb();
+
     LOG_INFO(g_logger) << "thread end";
     
     return 0;
@@ -55,36 +56,73 @@ void* Thread::run(void *arg) {
 
 //********************** Thread ctor **************************
 
-Thread::Thread(const std::string& name, std::function<void()> cb)
-    :m_cb(cb)
-    ,m_name(name)
-{
-    if(name.empty()) {
+// Thread::Thread(const std::string& name, std::function<void()> cb)
+//     :m_cb(cb)
+//     ,m_name(name)
+// {
+//     if(name.empty()) {
+//         m_name = "UNKOWN";
+//     }
+    
+//     int rt = pthread_create(&m_threadId,nullptr, &(Thread::run), this);
+//     if(rt) {
+//         LOG_ERROR(g_logger) << "pthread_create fail, rt=" << rt
+//                             << "create Thread =" << name;
+//         throw std::logic_error("pthread_create error");
+//     }
+//     //TODO semaphore w
+// }
+
+void Thread::start_thread(){
+
+    if(m_name.empty()){
         m_name = "UNKOWN";
     }
-    
-    int rt = pthread_create(&m_threadId,nullptr, &(Thread::run), this);
+    int rt = pthread_create(&m_threadId, nullptr, &(Thread::run), this);
+
     if(rt) {
         LOG_ERROR(g_logger) << "pthread_create fail, rt=" << rt
-                            << "create Thread =" << name;
+                            << "create Thread =" << m_name;
         throw std::logic_error("pthread_create error");
     }
-    //TODO semaphore w
+
+    m_sem.wait();
+    //使线程启动之后主线程才能离开
+    // TODO semaphore  w
+}
+
+void Thread::start_thread(const Thread_Attributes& attrs){
+
+    if(m_name.empty()){
+        m_name = "UNKOWN";
+    }
+
+    const pthread_attr_t* thr_attr = attrs.native_handle();
+    int rt = pthread_create(&m_threadId, thr_attr, &(Thread::run), this);
+
+    if(rt) {
+        LOG_ERROR(g_logger) << "pthread_create fail, rt=" << rt
+                            << "create Thread =" << m_name;
+        throw std::logic_error("pthread_create error");
+    }
+
+    //使线程启动之后主线程才能离开
+    // TODO semaphore  w
 }
 
 Thread::~Thread(){
-    if(m_threadId) {
-        // 分离线程
-       
-        pthread_detach(m_threadId);
-        m_threadId = 0; 
-    }
+    detach();
+    m_isExit.store(true);
 }
 
 
 bool Thread::join(){
+    if(m_isDetach){
+        LOG_DEBUG(g_logger) << "thread join: thread is detached";
+        return false;
+    }
 
-    if(m_threadId  ) {
+    if(m_threadId) {
         int rt = pthread_join(m_threadId, nullptr);
         if(rt) {
             LOG_ERROR(g_logger) << "pthread_join fail, rt=" << rt
@@ -93,16 +131,20 @@ bool Thread::join(){
         }
         m_threadId = 0;
     }
+
     return true;
 }
 
 bool Thread::detach() {
-    if(m_threadId) {
+    if(m_threadId && !m_isDetach) {
+        // 分离线程
         pthread_detach(m_threadId);
         m_threadId = 0;
+        m_isDetach.store(true);
     }
     return true;
 }
+
 
 bool Thread::equal(pthread_t oth){
     return pthread_equal(m_threadId, oth);

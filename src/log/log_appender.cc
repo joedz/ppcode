@@ -17,6 +17,7 @@ namespace ppcode {
     }
 
     void Appender::setFormatter(LogFormatter::ptr value){
+        MutexType::Lock mylock(m_mutex);
 
         m_formatter = value;
         if(m_formatter) {
@@ -27,6 +28,7 @@ namespace ppcode {
     }
 
     LogFormatter::ptr Appender::getFormatter(){
+        MutexType::Lock mylock(m_mutex);
         return m_formatter;
     }
 
@@ -37,7 +39,9 @@ namespace ppcode {
 
     void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event){
         if(isAppender(event->getLevel())) {
-        getFormatter()->format(std::cout, event);
+            MutexType::Lock mylock(m_mutex);
+            m_formatter->format(std::cout, event);
+            // getFormatter()->format(std::cout, event);  remember 这里会死锁
         }
     }
 
@@ -57,7 +61,9 @@ namespace ppcode {
 
     void FileAppender::log(Logger::ptr logger, LogEvent::ptr event){
         if(isAppender(event->getLevel())){
-            getFormatter()->format(m_logFile, event);
+            MutexType::Lock mylock(m_mutex);
+            m_formatter->format(m_logFile, event);
+            //getFormatter()->format(m_logFile, event);
         }
     }
 

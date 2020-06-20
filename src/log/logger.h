@@ -4,6 +4,7 @@
 #include "log_event.h"
 #include "log_format.h"
 #include "log_level.h"
+#include "../thread/spinlock.h"
 
 #include <string>
 #include <list>
@@ -15,6 +16,8 @@ namespace ppcode {
     class Logger : public std::enable_shared_from_this<Logger>{
     public:
         using ptr = std::shared_ptr<Logger>;
+        using MutexType = Spinlock;
+
         Logger(const std::string& name, LogLevel::Level level = LogLevel::Level::DEBUG);
     
         void log(LogLevel::Level level, LogEvent::ptr event);
@@ -39,12 +42,14 @@ namespace ppcode {
         // 设置root日志器
         Logger::ptr getRoot() { return m_root;}
         void setRoot(Logger::ptr logger) { m_root = logger;}
+        
     private:
         std::list<Appender::ptr> m_appenders;
         std::string m_name;
         LogLevel::Level m_level;
         LogFormatter::ptr m_formatter;
         Logger::ptr m_root;
+        MutexType m_mutex;
     };
 
 }

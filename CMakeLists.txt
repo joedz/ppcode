@@ -19,10 +19,14 @@ set(LIB_SRC
     src/log/log_manager.cc
 
 ## thread src
+    src/thread/barrier.cc
+    src/thread/condition_cariable.cc
+    src/thread/mutex.cc
+    src/thread/rwmutex.cc
+    src/thread/semaphore.cc
+    src/thread/spinlock.cc
     src/thread/thread.cc
-#   src/thread/mutex.cc
-#   
-# 
+    src/thread/thread_attributes.cc
 
 ## util src
     src/util/util.cc

@@ -25,6 +25,7 @@ namespace ppcode {
     }
 
     void Logger::addAppender( Appender::ptr appender){
+        MutexType::Lock mylock(m_mutex);
 
         if(!appender->getFormatter()){
             appender->setFormatter(m_formatter);
@@ -33,6 +34,8 @@ namespace ppcode {
     }
 
     void Logger::delAppender( Appender::ptr appender){
+        MutexType::Lock mylock(m_mutex);
+
         for(auto it = m_appenders.begin(); it != m_appenders.end(); ++it){
             if(*it == appender) {
                 m_appenders.erase(it);
@@ -42,11 +45,14 @@ namespace ppcode {
     }
 
     void Logger::clearAllAppenders(){
+        MutexType::Lock mylock(m_mutex);
+
         m_appenders.clear();
     }
 
 
     void Logger::setFormatter( LogFormatter::ptr value){
+        MutexType::Lock mylock(m_mutex);
 
         m_formatter = value;
         for(auto &it : m_appenders) {
@@ -55,12 +61,14 @@ namespace ppcode {
             }
         }
     }
-    void Logger::setFormatter(const std::string& value){
 
+    void Logger::setFormatter(const std::string& value){
+        
         LogFormatter::ptr newFormat(new LogFormatter(value));
         if(newFormat->isError()) {
             return;
         }
+        
         setFormatter(newFormat);
     }
 
