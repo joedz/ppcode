@@ -108,6 +108,9 @@ int main()
 	//test_event();
 	//test_format();
 	//test_logger();
-	test_log();
+	//test_log();
+
+	LOG_DEBUG(root_logger) << "massage";
+
 	return 0;
 }

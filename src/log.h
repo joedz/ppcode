@@ -10,12 +10,17 @@
 #include "thread/thread.h"
 #include "util/util.h"
 
+#ifndef __RELATIVE_PATH__
+// @brief 源文件名称 非路径名  通过cmake在编译时添加
+#define __RELATIVE_PATH__ __LINE__
+#endif
+
 
 // 流的方式写入日志
 #define LOG_LEVEL(logger, level)                                            \
     if (logger->getLevel() <= level)                                        \
     ppcode::LogWarp(ppcode::LogEvent::ptr(new ppcode::LogEvent(             \
-            logger, time(0), __FILE__, __LINE__, ppcode::GetThreadId(), 23, \
+            logger, time(0), (const char *)__RELATIVE_PATH__, __LINE__, ppcode::GetThreadId(), 23, \
             ppcode::Thread::GetThreadName(), level))).getSS()
 
 // debug 日志

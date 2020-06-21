@@ -5,9 +5,13 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <functional>
+#include <map>
+#include <unordered_map>
 
 #include "../log.h"
 #include "../thread/rwmutex.h"
+#include "../util/util.h"
 
 namespace ppcode {
 
@@ -45,7 +49,29 @@ protected:
 template <class T, class FromStr, class ToStr>
 class ConfigVar : public ConfigVarBase {
 public:
+    using RWMutexType = RWMutex;
+    using ptr = std::shared_ptr<ConfigVar>;
+    //using std::function<void (const T& old_value, const T& new_value)> on_change_cb;
 
+    ConfigVar();
+    virtual ~ConfigVar();
+
+     // 将配置转换成字符串
+    virtual std::string toString() = 0;
+    // 将配置从字符串初始化成值
+    virtual bool fromString(const std::string &) = 0;
+    // 返回配置的参数值的类型名称
+    virtual std::string getTypeName() const = 0;
+
+    const T getValue();
+    void setValue(const T& v);
+
+
+
+private:
+    RWMutex m_mutex;
+    T m_val;
+    //std::map<uint64_t, on_change_cb> m_cbs;
 };
 
 }  // namespace ppcode
