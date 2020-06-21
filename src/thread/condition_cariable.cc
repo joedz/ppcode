@@ -25,7 +25,6 @@ Condition_variable::~Condition_variable() {
     int rt;
     if (!(rt = pthread_mutex_destroy(&m_mutex))) {
         LOG_ERROR(g_logger) << "pthread_mutex_destroy failed, rt=" << rt;
-        throw std::logic_error("pthread_mutex_destroy failed,");
     }
 
     if (!(rt = pthread_cond_destroy(&m_cond))) {
