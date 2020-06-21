@@ -1,9 +1,8 @@
 #include "log_manager.h"
 
-
 namespace ppcode {
 
-LogManager::LogManager(){
+LogManager::LogManager() {
     m_root.reset(new Logger("root"));
     m_root->addAppender(std::make_shared<ConsoleAppender>());
 
@@ -11,11 +10,11 @@ LogManager::LogManager(){
 }
 
 // 获取一个日志器
-Logger::ptr LogManager::getLogger(const std::string& name){
+Logger::ptr LogManager::getLogger(const std::string& name) {
     MutexType::Lock myLock(m_mutex);
 
     auto it = m_map.find(name);
-    if(it != m_map.end()) {
+    if (it != m_map.end()) {
         return it->second;
     }
 
@@ -24,4 +23,4 @@ Logger::ptr LogManager::getLogger(const std::string& name){
     m_map[logger->getName()] = logger;
     return logger;
 }
-}
+}  // namespace ppcode

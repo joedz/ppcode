@@ -1,4 +1,8 @@
+
+
+## 一般c++ auto变量的使用
 ```cpp
+
 1、for(auto it = container.begin(); it != container.end(); ++it)
    for(const auto& item: container)
    for(auto&& item: container)

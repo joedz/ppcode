@@ -4,7 +4,7 @@
 
 namespace ppcode {
 
-class Barrier{
+class Barrier {
 public:
     Barrier(int count);
     ~Barrier();
@@ -18,4 +18,4 @@ private:
     int count;
 };
 
-}
+}  // namespace ppcode

@@ -16,7 +16,6 @@ Spinlock::~Spinlock(){
     int rt = pthread_spin_destroy(&m_spinlock);
     if(rt){
         LOG_ERROR(g_logger) << "pthread_spin_destroy failed, rt=" << rt;
-        throw std::logic_error("pthread_spin_destroy failed");
     }
 }
 

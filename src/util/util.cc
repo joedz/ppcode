@@ -5,18 +5,17 @@
 #include <sys/types.h>
 #include <stdlib.h>
 
+namespace ppcode
+{
 
-namespace ppcode{
+    pid_t GetThreadId()
+    {
+        return syscall(SYS_gettid);
+    }
 
+    size_t GetPageSize()
+    {
+        return syscall(_SC_PAGE_SIZE);
+    }
 
-pid_t GetThreadId() {
-    return syscall(SYS_gettid);
-}
-
-size_t GetPageSize(){
-    return syscall(_SC_PAGE_SIZE);
-}
-
-
-
-} // namespace name
+} // namespace ppcode

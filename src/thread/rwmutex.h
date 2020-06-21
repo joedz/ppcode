@@ -1,14 +1,14 @@
 #pragma once
 
+#include <pthread.h>
+
 #include "../util/noncopyable.h"
 #include "scopedlock.h"
-
-#include <pthread.h>
 
 namespace ppcode {
 
 // 读写锁
-class RWMutex{
+class RWMutex {
 public:
     // 局部读写锁
     using ReadLock = ReadScopedLock<RWMutex>;
@@ -32,4 +32,4 @@ private:
     pthread_rwlock_t m_rwmutex;
 };
 
-}
+}  // namespace ppcode

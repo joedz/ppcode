@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "thread/barrier.h"
 #include "thread/condition_variable.h"
 #include "thread/mutex.h"

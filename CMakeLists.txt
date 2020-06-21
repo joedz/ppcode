@@ -6,13 +6,12 @@ include(./utils.cmake)
 
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -fPIC -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -fPIC -g -std=c++11 -Wall  -mcx16  -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined  -Wno-deprecated-declarations")
 
 set(LIB_SRC
 
 ##  log src
     src/log/log_appender.cc
-    src/log/log_event.cc
     src/log/log_level.cc
     src/log/log_format.cc
     src/log/logger.cc
@@ -27,6 +26,9 @@ set(LIB_SRC
     src/thread/spinlock.cc
     src/thread/thread.cc
     src/thread/thread_attributes.cc
+    
+## lockfreelist src
+    src/thread/lockfreelist.cc
 
 ## util src
     src/util/util.cc
@@ -49,6 +51,7 @@ add_definitions(-Wno-builtin-macro-redefined)
 ppcode_add_executable(test_log "test/test_log.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_cmake "test/test_cmake.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_thread "test/test_thread.cc" ppcode "${LIBS}")
+ppcode_add_executable(test_lockfreelist "test/test_lockfreelist.cc" ppcode "${LIBS}")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

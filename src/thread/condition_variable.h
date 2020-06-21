@@ -1,12 +1,13 @@
 #pragma once
 
 #include <pthread.h>
+
 #include "mutex.h"
 
 namespace ppcode {
 
 //条件变量
-class Condition_variable{
+class Condition_variable {
 public:
     Condition_variable();
     ~Condition_variable();
@@ -15,10 +16,10 @@ public:
     void wait(Mutex& lock);
 
     // 必须传进的锁已经加锁的锁
-    template<class predicate_type>
-    void wati(Mutex& lock, predicate_type pred){
+    template <class predicate_type>
+    void wati(Mutex& lock, predicate_type pred) {
         // 条件变量应在互斥中访问
-        while(!pred()){
+        while (!pred()) {
             wait(lock);
         }
     }
@@ -31,13 +32,12 @@ public:
     void notify_all();
 
     // 获取接口
-    pthread_cond_t* native_handle(){ return &m_cond;}
-    const pthread_cond_t* native_handle() const{ return &m_cond;}
+    pthread_cond_t* native_handle() { return &m_cond; }
+    const pthread_cond_t* native_handle() const { return &m_cond; }
 
 private:
     pthread_mutex_t m_mutex;
     pthread_cond_t m_cond;
 };
 
-
-}
+}  // namespace ppcode
