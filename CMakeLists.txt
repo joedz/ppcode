@@ -3,6 +3,7 @@ project(ppcode)
 
 include(./utils.cmake)
 
+link_directories( /usr/local/lib64 )
 
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -48,11 +49,11 @@ add_library(ppcode SHARED ${LIB_SRC})
 set(LIBS 
     ppcode
     pthread
+    yaml-cpp
 )
 
 
-add_definitions(-Wno-builtin-macro-redefined)
-
+#add_definitions(-Wno-builtin-macro-redefined)
 
 ### 生成可执行文件自定义函数 
 
@@ -60,7 +61,7 @@ ppcode_add_executable(test_log "test/test_log.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_cmake "test/test_cmake.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_thread "test/test_thread.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_lockfreelist "test/test_lockfreelist.cc" ppcode "${LIBS}")
-
+ppcode_add_executable(test_yaml "test/test_yaml.cc" ppcode "${LIBS}")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
