@@ -28,7 +28,7 @@ public:
     std::vector<T> operator()(const std::string& value) {
         YAML::Node node(YAML::NodeType::Sequence);
 
-        for(auto& i : v) {
+        for(auto& i : value) {
             node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
         }
         std::stringstream ss;
