@@ -1,5 +1,7 @@
 #pragma once
 
+#include <yaml-cpp/yaml.h>
+
 #include <fstream>
 #include <memory>
 #include <string>
@@ -24,19 +26,22 @@ public:
 
     //@brief 模板方法 写日志
     virtual void log(std::shared_ptr<Logger> logger, LogEvent::ptr event) = 0;
+    virtual YAML::Node getYamlNode() = 0;
 
-	// 设置或获取 格式化器
+    // 设置或获取 格式化器
     void setFormatter(LogFormatter::ptr value);
     LogFormatter::ptr getFormatter();
+    void setFormatter(const std::string& value);
+    // std::string getYamlString();
 
-	// 设置 输出器的日志级别
+    // 设置 输出器的日志级别
     void setLevel(LogLevel::Level value) { m_level = value; }
     LogLevel::Level getLevel() const { return m_level; }
 
-	// appender输出地的日志级别 是否满足输出
+    // appender输出地的日志级别 是否满足输出
     bool isAppender(LogLevel::Level level) { return level >= m_level; }
 
-	// 是否拥有日志格式化器 如果没有使用 Logger的格式化器
+    // 是否拥有日志格式化器 如果没有使用 Logger的格式化器
     bool isHasFormatter() const { return m_hasFormatter; }
 
 protected:
@@ -56,7 +61,9 @@ public:
     using ptr = std::shared_ptr<ConsoleAppender>;
     ConsoleAppender() = default;
     virtual ~ConsoleAppender() = default;
-    virtual void log(std::shared_ptr<Logger> logger, LogEvent::ptr event) override;
+    virtual void log(std::shared_ptr<Logger> logger,
+                     LogEvent::ptr event) override;
+    virtual YAML::Node getYamlNode() override;
 };
 
 // @brief 日志输出到文件 同步
@@ -65,7 +72,11 @@ public:
     using ptr = std::shared_ptr<FileAppender>;
     FileAppender(const std::string& file_name);
     virtual ~FileAppender() = default;
-    virtual void log(std::shared_ptr<Logger> logger, LogEvent::ptr event) override;
+    virtual void log(std::shared_ptr<Logger> logger,
+                     LogEvent::ptr event) override;
+
+    const std::string getPath() const { return m_fileName; }
+    virtual YAML::Node getYamlNode() override;
 
 private:
     std::ofstream m_logFile;

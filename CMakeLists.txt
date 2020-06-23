@@ -33,11 +33,8 @@ set(LIB_SRC
     src/thread/thread.cc
     src/thread/thread_attributes.cc
     
-    
-
 ## util src
     src/util/util.cc
-
 
 ## os src
     src/os/os_linux.cc
@@ -51,7 +48,6 @@ set(LIBS
     pthread
     yaml-cpp
 )
-
 
 #add_definitions(-Wno-builtin-macro-redefined)
 

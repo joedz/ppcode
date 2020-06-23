@@ -25,12 +25,15 @@ std::string LogLevel::ToString(const LogLevel::Level level) {
 }
 
 LogLevel::Level LogLevel::FromString(const std::string& str) {
+    if(str.empty()) {
+        return LogLevel::Level::DEBUG;
+    }
     for (auto& it : StringLevel) {
         if (strcasecmp(it.second.c_str(), str.c_str()) == 0) {
             return it.first;
         }
     }
-    return LogLevel::Level::OFF;
+    return LogLevel::Level::DEBUG;
 }
 
 std::ostream& operator<<(std::ostream& out, const LogLevel::Level level) {

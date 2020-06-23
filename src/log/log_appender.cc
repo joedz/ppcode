@@ -23,10 +23,26 @@ void Appender::setFormatter(LogFormatter::ptr value) {
     }
 }
 
+void Appender::setFormatter(const std::string& value) {
+
+    LogFormatter::ptr format(new LogFormatter(value));
+
+    setFormatter(format);
+}
+
 LogFormatter::ptr Appender::getFormatter() {
     MutexType::Lock mylock(m_mutex);
     return m_formatter;
 }
+
+//std::string Appender::getYamlString(){
+    //MutexType::lock mylock(m_mutex);
+
+    //std::stringstream ss
+    //ss << getYamlNode();
+    //retrurn ss.str();
+//}
+
 
 /*******************************************************************
  * 输出到控制台  ConsoleAppender类
@@ -41,10 +57,16 @@ void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
         } else {
             logger->getFormatter()->format(event);
         }
-        
-        
     }
 }
+
+YAML::Node ConsoleAppender::getYamlNode(){
+     MutexType::Lock mylock(m_mutex);
+    YAML::Node node(YAML::NodeType::Map);
+    node["formatter"] = m_formatter->getPattern();
+    node["level"] = LogLevel::ToString(m_level);
+    return node;
+ }
 
 /*******************************************************************
  * 输出到文件  FileAppender类
@@ -64,6 +86,16 @@ void FileAppender::log(Logger::ptr logger, LogEvent::ptr event) {
         m_formatter->format(m_logFile, event);
         // getFormatter()->format(m_logFile, event);
     }
+}
+
+YAML::Node FileAppender::getYamlNode(){
+     MutexType::Lock mylock(m_mutex);
+    YAML::Node node(YAML::NodeType::Map);
+
+    node["path"] = m_fileName;
+    node["formatter"] = m_formatter->getPattern();
+    node["level"] = LogLevel::ToString(m_level);
+    return node;
 }
 
 // void FileAppender::append(const std::string& line){

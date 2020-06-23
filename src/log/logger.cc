@@ -1,4 +1,6 @@
 #include "logger.h"
+#include <yaml-cpp/yaml.h>
+#include <iostream>
 
 namespace ppcode {
 
@@ -12,12 +14,12 @@ void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
         return;
     }
     auto self = shared_from_this();
-
+    std::cout << "use default appender" << std::endl;
     if (m_appenders.empty()) {
         m_root->log(level, event);
         return;
     }
-
+    
     for (auto& it : m_appenders) {
         it->log(self, event);
     }
@@ -67,6 +69,31 @@ void Logger::setFormatter(const std::string& value) {
     }
 
     setFormatter(newFormat);
+}
+
+
+YAML::Node Logger::getYamlNode() {
+     YAML::Node node(YAML::NodeType::Map);
+    MutexType::Lock mylock(m_mutex);
+
+    node["name"] = m_name;
+    node["level"] = LogLevel::ToString(m_level);
+    node["formatter"] = m_formatter->getPattern();
+
+    YAML::Node appenders(YAML::NodeType::Sequence);
+
+    for(auto& appender : m_appenders) {
+        appenders.push_back(appender->getYamlNode());
+    }
+
+    node["appenders"] = appenders;
+    return node;
+}
+
+std::string Logger::getYamlString(){
+    std::stringstream ss;
+    ss << getYamlNode();
+    return ss.str();
 }
 
 }  // namespace ppcode

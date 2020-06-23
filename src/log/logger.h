@@ -9,6 +9,7 @@
 #include "log_event.h"
 #include "log_format.h"
 #include "log_level.h"
+#include <yaml-cpp/yaml.h>
 
 namespace ppcode {
 
@@ -48,6 +49,10 @@ public:
     Logger::ptr getRoot() { return m_root; }
     // 设置root日志器
     void setRoot(Logger::ptr logger) { m_root = logger; }
+
+
+    std::string getYamlString();
+    YAML::Node getYamlNode();
 
 private:
     std::list<Appender::ptr> m_appenders;

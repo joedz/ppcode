@@ -14,6 +14,7 @@
 #include "../util/singleton.h"
 #include "../util/util.h"
 #include "lexical_cast.h"
+#include "log_config.h"
 
 namespace ppcode {
 
@@ -94,7 +95,12 @@ public:
     // 返回配置的参数值的类型名称
     virtual std::string getTypeName() const override { return GetTypeName<T>(); }
 
-    const T getValue() {
+    T getValue() {
+        RWMutexType::ReadLock lock(m_mutex);
+        return m_val;
+    }
+    
+    const T& getValue() const {
         RWMutexType::ReadLock lock(m_mutex);
         return m_val;
     }

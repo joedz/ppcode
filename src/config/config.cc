@@ -2,6 +2,8 @@
 
 #include "../log.h"
 
+#include <iostream>
+
 namespace ppcode {
 
 static Logger::ptr g_loger = LOG_ROOT();
@@ -10,10 +12,9 @@ static Logger::ptr g_loger = LOG_ROOT();
 static void S_listYamlNode(
     const std::string& prefix, const YAML::Node& node,
     std::list<std::pair<std::string, YAML::Node>>& output) {
-    if (prefix.find_first_not_of("abcdefghijkmnopqrstuvwxyz_.0123456789") !=
+    if (prefix.find_first_not_of("qwertyuiopasdfghjklzxcvbnm_:.0123456789") !=
         std::string::npos) {
-        LOG_ERROR(g_loger) << "Config invaild name:"
-                           << " : " << node;
+        LOG_ERROR(g_loger) << "Config invaild name:" << " : " << prefix;
         return;
     }
     output.push_back(std::make_pair(prefix, node));
@@ -24,7 +25,7 @@ static void S_listYamlNode(
             if (prefix.empty()) {
                 S_listYamlNode(it->first.Scalar(), it->second, output);
             } else {
-                S_listYamlNode(prefix + "." + it->second.Scalar(), it->second,
+                S_listYamlNode(prefix + "." + it->first.Scalar(), it->second,
                                output);
             }
         }
@@ -41,10 +42,11 @@ void Config::LoadFromYaml(const YAML::Node& rootNode) {
         if(key.empty()) {
             continue;
         }
-
+     
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
 
         ConfigVarBase::ptr var = LookupBase(key);
+
 
         if(var) {
             if(it.second.IsScalar()) {

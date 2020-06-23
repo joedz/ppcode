@@ -110,7 +110,7 @@ int main()
 	//test_logger();
 	//test_log();
 
-	LOG_DEBUG(root_logger) << "massage";
-
+	//LOG_DEBUG(root_logger) << "massage";
+test_logger();
 	return 0;
 }

@@ -23,4 +23,9 @@ Logger::ptr LogManager::getLogger(const std::string& name) {
     m_map[logger->getName()] = logger;
     return logger;
 }
+
+
+
+
+
 }  // namespace ppcode
