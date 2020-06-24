@@ -84,4 +84,4 @@ void test_one_thrad() {
     }
 }
 
-int main() { run_thread(); }
+int main() { test_one_thrad(); }

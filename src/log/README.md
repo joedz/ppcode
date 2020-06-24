@@ -36,6 +36,28 @@
 			FATAL,		// 打印错误日志 严重错误
 			OFF			// 不打印日志
 
+###  日志器使用
+```
+1. 通过LOG_NAME的宏创建一个日志器，需要自己加入日志输出器
+2. 通过LOG_LOAD_FILE的宏， 从指定的配置文件中指定名称的日志器，可以配置日志器名称，级别，格式，输出器
+3. 通过LOG_DEBUG(logger)的宏，从指定日志器中输出DEBUG的日志
+
+```
+### 日志配置格式
+
+```yaml
+testlog:   # 日志加载是名称
+  name: "testlog"  # 日志在程序中打印的名称
+  level: "debug"   # 日志器的级别
+  formatter: "%D%T%t%P%c%m%N%n"  # 日志器的格式化
+  appenders:
+    - type :  "fileappender"  # 日志输出器类型
+      path :  "outlog.txt"    # 日志输出器输出指定文件
+      level : "debug"         # 日志输出器输出级别
+      formatter : "%D%T%t%P%c%m%N%n" # 日志格式化
+    - type : "consoleappender"       # 日志输出器类型
+      level : "debug"               #日志输出器级别
+```
 
 ## 性能测试
 

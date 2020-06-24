@@ -44,3 +44,5 @@
 #define LOG_ROOT() ppcode::LogManager::getInstance()->getRoot()
 
 #define LOG_NAME(name) ppcode::LogManager::getInstance()->getLogger(name)
+
+#define LOG_LOAD_FILE(path, name) ppcode::LogManager::getInstance()->loadLogger(path, name)

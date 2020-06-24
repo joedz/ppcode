@@ -10,8 +10,7 @@
 
 namespace ppcode {
 //默认日志格式
-std::string default_log_formatter =
-    "%D{%y-%m-%d %H:%M:%S}%T%t %N fiber=%F%T[%c] [%P]%T%f:%L%T%e %E%T%m%n";
+
 
 // 存储时间的最大缓冲区长度
 const static uint32_t s_time_max_buffer_size = 64;

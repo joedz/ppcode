@@ -14,7 +14,7 @@
 #include "../util/singleton.h"
 #include "../util/util.h"
 #include "lexical_cast.h"
-#include "log_config.h"
+
 
 namespace ppcode {
 

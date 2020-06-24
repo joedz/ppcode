@@ -55,7 +55,7 @@ public:
         YAML::Node node = YAML::Load(value);
 
         FileAppender::ptr appender;
-
+        //std::cout << "appender=" << value << std::endl;
         std::string path;
         if (node["path"].IsScalar()) {
             path = node["path"].as<std::string>();
@@ -93,7 +93,7 @@ class LexicalCast<std::string, ConsoleAppender> {
 public:
     ConsoleAppender::ptr operator()(const std::string& value) {
         YAML::Node node = YAML::Load(value);
-
+        //std::cout << "appender=" <<value << std::endl;
         ConsoleAppender::ptr appender(new ConsoleAppender);
 
         LogLevel::Level level = LogLevel::FromString(
@@ -137,6 +137,7 @@ public:
         logger->setLevel(level);
 
         if (node["formatter"].IsScalar()) {
+            //std::cout << node["formatter"].as<std::string>() << std::endl;
             logger->setFormatter(node["formatter"].as<std::string>());
         }
 
@@ -148,15 +149,18 @@ public:
                 Appender::ptr appender;
                 ss.str("");
                 ss << appenders[i];
-
-                if (appenders["type"].as<std::string>() == "fileappender") {
+                //std::cout <<appenders[i] << appenders[i]["type"] << std::endl;
+                std::string str = appenders[i]["type"].as<std::string>();
+                
+                if (str == "fileappender") {
                     // appender = std::dynamic_pointer_cast<Appender>(
                     // LexicalCast<std::string, FileAppender>(
                     //     appenders[i].as<std::string>()
                     //     ));
+                    std::cout << "----------" << std::endl;
                     FileAppender::ptr fappender = LexicalCast<std::string, FileAppender>()(ss.str());
                     appender = std::dynamic_pointer_cast<Appender>(fappender);
-                } else if (appenders["type"].as<std::string>() ==
+                } else if (str ==
                            "consoleappender") {
                     // appender =
                     // std::dynamic_pointer_cast<Appender>(LexicalCast<std::string,

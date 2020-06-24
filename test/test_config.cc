@@ -1,5 +1,6 @@
-#include "../src/config/config.h"
 #include "../src/log.h"
+#include "../src/config/config.h"
+
 #include <string>
 
 static ppcode::Logger::ptr g_logger = LOG_NAME("system");
@@ -144,14 +145,17 @@ ppcode::ConfigVar<std::vector<std::set<int> > >::ptr g_vector_int_var_config = p
 
 void test_config_log(){
 
-    YAML::Node node = YAML::LoadFile("./test_config.yaml");
+    // YAML::Node node = YAML::LoadFile("./test_config.yaml");
 
-    std::stringstream ss;
-    ss << node["testlog"];
-    //ppcode::LogManager().getInstance()->getRoot();
+    // std::stringstream ss;
+    // ss << node["testlog"];
+    // //ppcode::LogManager().getInstance()->getRoot();
 
-    ppcode::Logger::ptr l_logger = ppcode::LexicalCast<std::string, ppcode::Logger>
-            ()(ss.str());
+    // ppcode::Logger::ptr l_logger = ppcode::LexicalCast<std::string, ppcode::Logger>
+    //         ()(ss.str());
+
+     ppcode::Logger::ptr l_logger =
+     ppcode::LogManager::getInstance()->loadLogger("./test_config.yaml", "testlog");
 
     std::cout << l_logger->getName()<< std::endl;
     std::cout << l_logger->getLevel() << std::endl;
@@ -171,6 +175,5 @@ int main() {
    // test_more_type();
    // test_load_config_file();
     test_config_log();
-
-
+    
 }

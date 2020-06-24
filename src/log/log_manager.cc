@@ -1,4 +1,5 @@
 #include "log_manager.h"
+#include "../config/log_config.h"
 
 namespace ppcode {
 
@@ -24,8 +25,31 @@ Logger::ptr LogManager::getLogger(const std::string& name) {
     return logger;
 }
 
+std::string LogManager::getYamlString() {
+    MutexType::Lock lock(m_mutex);
 
+    YAML::Node node;
+    for(auto&i : m_map) {
+        node.push_back(YAML::Load(i.second->getYamlString()));
+    }
 
+    std::stringstream ss;
+    ss << node;
+    return ss.str();
+}
+
+Logger::ptr LogManager::loadLogger(const std::string& path, const std::string& loggerName){
+    YAML::Node node = YAML::LoadFile(path);
+
+    std::stringstream ss;
+    ss << node[loggerName];
+    //ppcode::LogManager().getInstance()->getRoot();
+
+    ppcode::Logger::ptr l_logger = ppcode::LexicalCast<std::string, ppcode::Logger>
+            ()(ss.str());
+
+    return l_logger;
+}
 
 
 }  // namespace ppcode

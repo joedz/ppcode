@@ -63,7 +63,8 @@ void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
 YAML::Node ConsoleAppender::getYamlNode(){
      MutexType::Lock mylock(m_mutex);
     YAML::Node node(YAML::NodeType::Map);
-    node["formatter"] = m_formatter->getPattern();
+    if(isHasFormatter()) 
+        node["formatter"] = m_formatter->getPattern();
     node["level"] = LogLevel::ToString(m_level);
     return node;
  }
@@ -83,7 +84,12 @@ FileAppender::FileAppender(const std::string& file_name)
 void FileAppender::log(Logger::ptr logger, LogEvent::ptr event) {
     if (isAppender(event->getLevel())) {
         MutexType::Lock mylock(m_mutex);
-        m_formatter->format(m_logFile, event);
+       if(isHasFormatter()) {
+            // bug : 错误的使用 getFormatter()->format(std::cout, event); 导致死锁
+            m_formatter->format(m_logFile, event);
+        } else {
+            logger->getFormatter()->format(event);
+        }
         // getFormatter()->format(m_logFile, event);
     }
 }
@@ -93,7 +99,8 @@ YAML::Node FileAppender::getYamlNode(){
     YAML::Node node(YAML::NodeType::Map);
 
     node["path"] = m_fileName;
-    node["formatter"] = m_formatter->getPattern();
+    if(isHasFormatter()) 
+        node["formatter"] = m_formatter->getPattern();
     node["level"] = LogLevel::ToString(m_level);
     return node;
 }

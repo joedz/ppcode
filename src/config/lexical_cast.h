@@ -228,3 +228,5 @@ public:
 };
 
 }  // namespace ppcode
+
+#include "log_config.h"

@@ -8,8 +8,9 @@
 
 namespace ppcode {
 
+#define default_log_formatter  "%D{%y-%m-%d %H:%M:%S}%T%t %N fiber=%F%T[%c] [%P]%T%f:%L%T%e %E%T%m%n"
+
 // 默认的日志解析格式  must be correct
-extern std::string default_log_formatter;
 
 class LogFormatterItem {
 public:
@@ -26,7 +27,7 @@ public:
     // 格式化 日志
     using ptr = std::shared_ptr<LogFormatter>;
 
-    LogFormatter(const std::string& pattern = "");
+    LogFormatter(const std::string& pattern = default_log_formatter );
 
     // 日志解析是否出现错误
     bool isError() const { return m_error; }
