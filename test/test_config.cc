@@ -155,7 +155,7 @@ void test_config_log(){
     //         ()(ss.str());
 
      ppcode::Logger::ptr l_logger =
-     ppcode::LogManager::getInstance()->loadLogger("./test_config.yaml", "testlog");
+     ppcode::LogManager::getInstance()->loadLogger("../test_config.yaml", "testlog");
 
     std::cout << l_logger->getName()<< std::endl;
     std::cout << l_logger->getLevel() << std::endl;

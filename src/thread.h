@@ -4,6 +4,7 @@
 #include "thread/condition_variable.h"
 #include "thread/mutex.h"
 #include "thread/rwmutex.h"
+#include "thread/scopedlock.h"
 #include "thread/semaphore.h"
 #include "thread/spinlock.h"
 #include "thread/thread.h"

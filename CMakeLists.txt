@@ -32,7 +32,7 @@ set(LIB_SRC
     src/thread/spinlock.cc
     src/thread/thread.cc
     src/thread/thread_attributes.cc
-    
+
 ## util src
     src/util/util.cc
 
@@ -47,6 +47,8 @@ set(LIBS
     ppcode
     pthread
     yaml-cpp
+    boost_context
+    boost_system
 )
 
 #add_definitions(-Wno-builtin-macro-redefined)
@@ -59,6 +61,8 @@ ppcode_add_executable(test_thread "test/test_thread.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_lockfreelist "test/test_lockfreelist.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_yaml "test/test_yaml.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_config "test/test_config.cc" ppcode "${LIBS}")
+ppcode_add_executable(test_coroutines "test/test_coroutines.cc" ppcode "${LIBS}")
+
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
