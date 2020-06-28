@@ -47,6 +47,10 @@ INLINE void SwapIn(){
      boost::context::jump_fcontext(&GetTlsContext(), m_ctx, m_vp, false);
 }
 
+INLINE void SwapIn(Context& other){
+     boost::context::jump_fcontext(other.m_ctx, m_ctx, m_vp, false);
+}
+
 INLINE void SwapOut(){
      boost::context::jump_fcontext(m_ctx, &GetTlsContext(), m_vp, false);
 }
@@ -60,14 +64,13 @@ INLINE static fcontext_t& GetTlsContext(){
     return tls_context;
 }
 
-
 private:
     fcontext_t*             m_ctx;              // 协程上下文 采用boost
     Fn_t                    m_fn;               // 运行函数
     intptr_t                m_vp;               // 当前上下文属于的协程 Task 对象指针
     char*                   m_stack = nullptr;  // 栈空间
     uint32_t                m_stackSize = 0;    // 栈空间大小
-    int                     m_protectPage = 0;  // 保护页数量
+
 };
 
 

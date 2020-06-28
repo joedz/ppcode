@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <string>
+#include <unistd.h>
 
 #include "../log.h"
 #include "../util/util.h"
@@ -29,6 +30,9 @@ Thread* Thread::GetThis() { return t_thread; }
 const std::string& Thread::GetThreadName() { return t_Thread_name; }
 
 void Thread::SetThreadName(const std::string& name) {
+    if(name.empty()) {
+        return;
+    }
     t_Thread_name = name;
     // pthread_setname_np()
 }
@@ -57,6 +61,10 @@ void* Thread::run(void* arg) {
     LOG_INFO(g_logger) << "thread end";
     
     pthread_exit(nullptr);
+}
+
+long Thread::hardware_concurrency(){
+    return  sysconf(_SC_NPROCESSORS_ONLN);
 }
 
 //********************** Thread ctor **************************
@@ -99,6 +107,7 @@ void Thread::start_thread(const Thread_Attributes& attrs) {
     }
 
     const pthread_attr_t* thr_attr = attrs.native_handle();
+
     int rt = pthread_create(&m_threadId, thr_attr, &(Thread::run), this);
 
     if (rt) {
@@ -135,6 +144,8 @@ bool Thread::join() {
     return true;
 }
 
+
+
 bool Thread::detach() {
     if (m_threadId && !m_isDetach) {
         pthread_detach(m_threadId);  // 分离线程
@@ -145,5 +156,29 @@ bool Thread::detach() {
 }
 
 bool Thread::equal(pthread_t oth) { return pthread_equal(m_threadId, oth); }
+
+
+    //UN
+    void Thread::cancel(){
+        if(m_isExit) {
+            return;
+        }
+        int rt = pthread_cancel(m_threadId);
+        if(rt) {
+            LOG_ERROR(g_logger)
+                << "pthread_join fail, rt=" << rt << " join thread=" << m_name;
+            throw std::logic_error("thread_join error");
+        }
+    }
+
+    //UN
+    bool Thread::joinable(){
+        if(m_isExit || m_isDetach) {
+            return false;
+        }
+        
+        return true;
+    }
+
 
 }  // namespace ppcode

@@ -7,6 +7,7 @@
 
 #include "../src/fiber/context.h"
 #include "../src/util/macro.h"
+#include "../src/fiber/fiber.h"
 
 using namespace boost::context;
 
@@ -14,6 +15,14 @@ volatile bool isRuning = true;
 
 boost::context::fcontext_t* nfc;
 boost::context::fcontext_t ofc;
+
+
+
+
+
+
+
+
 void test_swapIn(intptr_t param);
 
 ppcode::Context tctx(test_swapIn, 1234, 128 * 1024);
@@ -32,8 +41,6 @@ void test_swapIn(intptr_t param) {
 }
 
 void test_context() {
-    
-    
      tctx.SwapIn();
     
     int i = 0;

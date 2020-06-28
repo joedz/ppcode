@@ -25,6 +25,7 @@ public:
     pthread_attr_t* native_handle(){
         return &m_attr;
     }
+
     // 获取const类型原始属性结构
     const pthread_attr_t* native_handle() const{
         return &m_attr;

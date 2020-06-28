@@ -15,6 +15,12 @@ set(LIB_SRC
 ## config src
     src/config/config.cc
 
+## fiber src
+
+    src/fiber/fiber.cc
+    src/fiber/processer.cc
+    src/fiber/scheduler.cc
+
 ##  log src
     src/log/log_appender.cc
     src/log/log_level.cc
@@ -25,7 +31,7 @@ set(LIB_SRC
 ## thread src
     src/thread/barrier.cc
     src/thread/condition_cariable.cc
-    src/thread/lockfreelist.cc
+    
     src/thread/mutex.cc
     src/thread/rwmutex.cc
     src/thread/semaphore.cc
@@ -36,7 +42,7 @@ set(LIB_SRC
 ## util src
     src/util/util.cc
 
-## os src
+## os srcs
     src/os/os_linux.cc
     src/os/os_window.cc
 )
@@ -49,6 +55,8 @@ set(LIBS
     yaml-cpp
     boost_context
     boost_system
+    boost_thread
+    
 )
 
 #add_definitions(-Wno-builtin-macro-redefined)
@@ -62,7 +70,7 @@ ppcode_add_executable(test_lockfreelist "test/test_lockfreelist.cc" ppcode "${LI
 ppcode_add_executable(test_yaml "test/test_yaml.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_config "test/test_config.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_coroutines "test/test_coroutines.cc" ppcode "${LIBS}")
-
+ppcode_add_executable(test_sche "test/test_sche.cc" ppcode "${LIBS}")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

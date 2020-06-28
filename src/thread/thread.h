@@ -33,6 +33,15 @@ public:
         start_thread();
     }
 
+    template <class F, class... Args>
+    Thread(std::string& name, F&& f, Args&&... args)
+        : m_name(name), __THREAD_INIT_DATA__ {
+        auto fun = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+        m_cb = std::move(fun);
+        // m_cb();
+        start_thread();
+    }
+
     //线程构造函数 特例化版本2 通过const char* 为线程命名
     template <class F, class... Args>
     Thread(const char* name, F&& f, Args&&... args)
@@ -53,6 +62,8 @@ public:
         // m_cb();
         start_thread(attrs);
     }
+
+    
 
     // 线程构造函数 线程特例化版本4 为线程添加属性
     template <class F, class... Args>
@@ -77,6 +88,12 @@ public:
 
     //  阻塞等待线程结束  又父线程调用
     bool join();
+
+    //UN
+    bool joinable();
+
+    //UN
+    void cancel();
     //  线程分离 默认在线程析构函数调用
     bool detach();
     // 判断线程是否相同
@@ -88,6 +105,8 @@ public:
     // 获取线程名称
     std::string getName() { return m_name; }
 
+
+
 public:
     // 设置本线程名称
     static void SetThreadName(const std::string& name);
@@ -95,6 +114,8 @@ public:
     static const std::string& GetThreadName();
     // 获取本线的结构体
     static Thread* GetThis();
+
+    static long hardware_concurrency();
 
 private:
     //启动线程函数
