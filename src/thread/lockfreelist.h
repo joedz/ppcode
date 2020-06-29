@@ -8,13 +8,14 @@
 #include <cstddef>
 
 #include "../util/noncopyable.h"
+
 #define atomic_cas(ptr, oldVal, newVal) \
     __sync_bool_compare_and_swap(ptr, oldVal, newVal)
 
 #define atomic_add(ptr, margin) __sync_fetch_and_add(ptr, margin)
 #define atomic_sub(ptr, margin) __sync_fetch_ann_sub(ptr, margin)
 #define atomic_increment__(ptr) __sync_fetch_and_add(ptr, 1)
-#define atomic_decrement(ptr) __sync_fetch_and_sub(ptr, 1)
+#define atomic_decrement__(ptr) __sync_fetch_and_sub(ptr, 1)
 
 #define atomic_add_and_fetch(ptr, op) __sync_add_and_fetch(ptr, op)
 #define atomic_and_and_fetch(ptr, op) __sync_and_and_fetch(ptr, op)
@@ -27,6 +28,8 @@
 #define atomic_read(ptr) __sync_fetch_and_add(ptr, 0)
 #define atomic_read_double(ptr) \
     __sync_fetch_and_add((volatile atomic_longlong*)ptr, 0)
+
+
 namespace ppcode {
 
 template <class T>

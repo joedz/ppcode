@@ -22,12 +22,12 @@ Condition_variable::Condition_variable() {
 }
 
 Condition_variable::~Condition_variable() {
-    int rt;
-    if (!(rt = pthread_mutex_destroy(&m_mutex))) {
+    int rt = pthread_mutex_destroy(&m_mutex);
+    if (rt ){
         LOG_ERROR(g_logger) << "pthread_mutex_destroy failed, rt=" << rt;
     }
-
-    if (!(rt = pthread_cond_destroy(&m_cond))) {
+    rt = pthread_cond_destroy(&m_cond);
+    if (rt) {
         LOG_ERROR(g_logger) << "pthread_cond_destroy failed, rt=" << rt;
     }
 }

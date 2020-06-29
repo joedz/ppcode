@@ -1,177 +1,223 @@
 #include "processer.h"
-
+#include "../util/macro.h"
 #include "../log.h"
-
 #include "scheduler.h"
-
-
 namespace ppcode {
 
-Logger::ptr g_logger = LOG_ROOT();
-
-
+static Logger::ptr g_logger = LOG_ROOT();
 static thread_local Fiber* t_fiber = nullptr;
-static thread_local Processer* t_proc = nullptr;
 
-  Fiber* Processer::GetCuttentFiber(){
-      return t_fiber;
-  }
-  Processer* Processer::GetCurrentProcesser(){
-      return t_proc;
-  }
+// 构造方法
+Processer::Processer(Scheduler* sche, uint32_t id)
+:m_id(id),
+ m_sche(sche){
+    LOG_DEBUG(g_logger) << "Processer is start, and num=" << m_id;
+}
 
-  Scheduler* Processer::GetScheduler(){
-      return t_proc->m_sche;
-  }
+Processer::~Processer(){
+    m_stopping = true;
+    LOG_DEBUG(g_logger) << "Processer is end, and num=" << m_id
+        << " but have fiber=" << m_fiberSize;
 
-  void Processer::ToYield(){
-    auto fiber = GetCuttentFiber();
-    ++(fiber->getYieldCount());
-    fiber->SwapOut();
-  }
-
-  bool Processer::Wakeup(){
-    return false;
-  }
-
-
-Processer::Processer(Scheduler* sche, size_t num, const std::string& name)
-:m_sche(sche),
-m_name(name),
-m_id(num),
-m_switchCount(0)
-{
-    LOG_DEBUG(g_logger) << "processer is start " << num << " " << name;
-
+    ASSERT_BT(m_stopping);
 }
 
 
-void Processer::Process(){
-    t_proc = this;
-    static int gcTimes = 0;
-    LOG_DEBUG(g_logger) << "processer is processer " << m_id << " " << m_name;
-    while(!(m_sche->isStop())){
+// 协程切出
+void Processer::toYield(){
+    auto proc = getThis();
+    proc->yield();
+}
 
-        runnableQueue.pop(t_fiber);
+// 协程切出
+void Processer::yield(){
+    ++m_yieldCount;
 
-        if(!t_fiber) {
-            waitCondition();
+    Fiber* fb = getCurrentFiber();
+
+    fb->SwapOut();
+}
+
+// // 阻塞
+// static void Suspend();
+// // 阻塞
+// void suspend();
+// 获取执行器
+
+Processer* & Processer::getThis(){
+    static thread_local Processer* proc = nullptr;
+    return proc; 
+}
+
+Fiber* Processer::getCurrentFiber(){
+    return t_fiber;
+}
+
+// 添加协程
+void Processer::addFiber(Fiber::ptr fiber){
+
+    //MutexType::lock lock(m_mutex);
+    //newQueue.push(fiber);
+
+    //Fiber* fb = fiber.get();
+
+    while(! newQueue.push(fiber)) {}
+    ++m_fiberSize;
+
+    if(!m_running) {
+        this->notify();
+    } else {
+        m_notidied = true;
+    }
+
+}
+
+// 添加多个协程  加锁
+void Processer::addFibers(std::list<Fiber::ptr>& list){
+    //MutexType::lock lock(m_mutex);
+
+   //Fiber* fb;
+   Fiber::ptr fb;
+
+    m_fiberSize += list.size();
+
+    while(list.empty()) {
+        fb = list.front();
+        list.pop_front();
+        while(!newQueue.push(fb));
+    }
+
+    if(!m_running) {
+        this->notify();
+    } else {
+        m_notidied = true;
+    }
+}
+
+// 调度器执行使执行器执行
+void Processer::start(){
+    // 线程执行这个函数
+    execute();
+}
+
+//  调度器通知等待的执行器
+void Processer::notify(){
+//  MutexType::Lock lock(m_mutex);
+//  m_cv.notify_all();
+}
+
+// 执行器执行
+void Processer::execute(){
+    getThis() = this;
+    LOG_ERROR(g_logger) << "product num=" << m_id << " is execute";
+
+    while(!m_sche->isStopping()) {
+        Fiber::ptr fb;
+        runableQueue.pop(fb);
+        
+        //LOG_ERROR(g_logger) << t_fiber->getFiberId() << std::endl;
+        if(!fb) {
+            getNewFibers();
             continue;
+            //runableQueue.pop(t_fiber);
+            if(!fb){
+                waitting();
+            }
         }
 
-        if(t_fiber->getFiberState() != TaskState::reday) {
-            if(t_fiber->getFiberState() == TaskState::done) {
-                LOG_ERROR(g_logger) << "err, A coroutine ends but reappears in the run queue"
-                    << t_fiber->getFiberId() ;
-            } else {
+        while(fb && !m_sche->isStopping()) {
+            fb->getFiberState() = TaskState::running;
+            fb->getProcesser() = this;
 
-            }
-        } 
+            ++m_swithCount;
+            fb->SwapIn();
 
-        while(t_fiber && !m_sche->isStop()) {
-            
-            
-            t_fiber->getFiberState() = TaskState::running;
-
-            t_fiber->getProcesser() = this;
-
-            ++m_switchCount;
-
-            t_fiber->SwapIn();
-
-            switch (t_fiber->getFiberState())
+            switch (fb->getFiberState())
             {
             case TaskState::running:
-                /* code */
-                runnableQueue.push(t_fiber);
-                t_fiber = nullptr;
+                
+                while(!runableQueue.push(fb));
 
+                if(m_fiberSize > 32) {
+                    getNewFibers();
+                }
                 break;
             case TaskState::block:
-                /* code */
-                
+                // TODO 
                 break;
             case TaskState::done:
-              
             default:
-                ++gcTimes;
-                //gcQueue.push(t_fiber);
-                gcQueue.push_back(t_fiber);
-                t_fiber = nullptr;
-
-                if(gcQueue.size() > 16) {
+                if(gcQueue.size() > 32) {
                     gc();
                 }
-
+                gcQueue.push_back(fb);
+                if(fb->getExcetionPtr()) {
+                    std::exception_ptr ep = fb->getExcetionPtr();
+                    std::rethrow_exception(ep);
+                }
                 break;
             }
+            fb = nullptr;
         }
     }
 }
 
-void Processer::NotifyCondition(){
-    MutexType::Lock lock(m_mutex);
-
-    if(m_waiting) {
-        m_cv.notify_all();
-    } else {
-        m_notified = true;
+// gc回收
+void Processer::gc(){
+    //Fiber::ptr fb;
+    // 清楚
+    while(!gcQueue.empty()){
+       // fb = gcQueue.front();
+        gcQueue.pop_front();
+        //delete fb;
     }
 }
 
-void Processer::waitCondition(){
+// 执行器添加新的协程
+void Processer::getNewFibers(){
+    
+    //uint64_t size = m_fiberSize;
+    unsigned long size = 0;
+    // 获取新加入的协程个数
+    do {
+        size = m_fiberSize;
+        // 当前的 值等于 协程的个数 ,之后将这个数值设置成0
+        if(m_fiberSize.compare_exchange_strong(size, 0, std::memory_order_acquire)){
+            break;
+        }
+    }while(1);
+    m_nowFiberSize += size;
+    // 从newQueue队列中取出size个协程数, 因为在其他线程现实当前协程个数为0, 所以其他线程只能添加协程, 不能steal协程
+    //Fiber *fb;
+    Fiber::ptr fb;
+    for(unsigned long i = 0; i < size; ++i) {
+        while(newQueue.pop(fb)){    // 从 newQueue队列中获取 协程 成功
+            while(!runableQueue.push(fb)); // 加入到run队列
+            break;
+        }
+    }
+}
+
+// 获取当前调度器
+void Processer::getScheduler(){
+    // UNDO
+}
+
+// 执行器等待时的方法
+void Processer::waitting(){
     this->gc();
+
     MutexType::Lock lock(m_mutex);
-    if(m_notified) {
-        m_notified = false;
+    LOG_ERROR(g_logger) << "product num=" << m_id << " is waitting";
+
+    if(m_notidied) {
+        m_notidied = false;
         return;
     }
-    m_waiting = true;
+
+    m_running = false;
     m_cv.wait(m_mutex);
-    m_waiting = false;
+    m_running = true;
 }
 
-void Processer::AddFiber(Fiber::ptr fb){
-     //MutexType::Lock lock(m_mutex);
-
-    uint32_t times = 0;
-    Fiber* fbPtr = fb.get();
-
-    while(!runnableQueue.push(fbPtr)){
-        ++times;
-        if(times >  100) {
-            times = 0;
-            LOG_DEBUG(g_logger) << "Processer push newQueue fail 100 times";
-            // 暂时让出cpu
-        }
-    }
-
-    if(m_waiting) {
-        m_cv.notify_all();
-    } else {
-        m_notified = true;
-    }
 }
-
-
-// std::list<Fiber> Processer::Steal(size_t n){
-//     s
-// }
-
-
-void Processer::gc(){
-
-    Fiber* fb;
-
-    while(!gcQueue.empty()) {
-        fb = gcQueue.front();
-        fb->~Fiber();
-    }
-}
-
-
-void Processer::addNewFiber(){
-
-}
-
-}  // namespace ppcode

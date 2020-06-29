@@ -6,15 +6,13 @@
 #include "../util/macro.h"
 #include "context.h"
 
-
-
 namespace ppcode {
 
 enum class TaskState { reday, running, block, done };
 
 class Processer;
-
-class Fiber : public std::enable_shared_from_this<Fiber> {
+// : public std::enable_shared_from_this<Fiber>
+class Fiber  {
 public:
     using ptr = std::shared_ptr<Fiber>;
 
@@ -32,14 +30,19 @@ public:
 
     INLINE TaskState& getFiberState() { return m_state; }
 
-    INLINE Processer*& getProcesser() { return m_proc;}
+    //INLINE Processer*& getProcesser() { return m_proc;}
 
     INLINE uint64_t& getYieldCount() { return m_yieldCount;}
+
+    INLINE Processer*& getProcesser() { return m_proc;}
+
+    INLINE std::exception_ptr getExcetionPtr() { return m_eptr;}
 
 private:
 
     void run();
     static void StaticRun(intptr_t vp);
+
     Fiber(const Fiber&) = delete;
     Fiber(Fiber&&) = delete;
     Fiber& operator=(const Fiber&) = delete;

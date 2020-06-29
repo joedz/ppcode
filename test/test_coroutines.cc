@@ -1,26 +1,13 @@
 #include <ucontext.h>
 
-#include <boost/context/all.hpp>
-#include <boost/context/fcontext.hpp>
-#include <boost/coroutine/all.hpp>
+
 #include <iostream>
 
 #include "../src/fiber/context.h"
 #include "../src/util/macro.h"
 #include "../src/fiber/fiber.h"
 
-using namespace boost::context;
-
 volatile bool isRuning = true;
-
-boost::context::fcontext_t* nfc;
-boost::context::fcontext_t ofc;
-
-
-
-
-
-
 
 
 void test_swapIn(intptr_t param);
@@ -31,7 +18,7 @@ void test_swapIn(intptr_t param) {
     std::cout << "fun recv param:" << param << std::endl;
 
     int i;
-    for (i = 1; i <= 20; i++) {
+    for (i = 1; i <= 30; i++) {
         std::cout << "func loop: " << i << std::endl;
         // 切换上下文
         // jump_fcontext(nfc, &ofc, i, false);
@@ -41,10 +28,11 @@ void test_swapIn(intptr_t param) {
 }
 
 void test_context() {
+    
      tctx.SwapIn();
     
     int i = 0;
-    for (i = 1; i <= 20; ++i) {
+    for (i = 1; i <= 30; ++i) {
       
         std::cout << "main loop " << i << " recv ret "  << std::endl;
 
@@ -56,7 +44,8 @@ void test_context() {
               << std::endl; 
 }
 
-int main() { test_context(); }
+fcontext_t nfc;
+fcontext_t ofc;
 
 void test_fcontext(intptr_t param) {
     std::cout << "fun recv param:" << param << std::endl;
@@ -65,7 +54,7 @@ void test_fcontext(intptr_t param) {
     for (i = 1; i <= 20; i++) {
         std::cout << "func loop: " << i << std::endl;
         // 切换上下文
-        jump_fcontext(nfc, &ofc, i, false);
+        jump_fcontext(&nfc, ofc, i, false);
     }
     // 这个函数 执行完成后线程结束
 }
@@ -93,3 +82,9 @@ void test_make_jump() {
     std::cout << " main end  main loop" << i << " recv ret=" << ret
               << std::endl;
 }
+
+
+int main() { 
+    test_context();
+ }
+

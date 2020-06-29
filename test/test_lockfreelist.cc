@@ -11,7 +11,7 @@
 std::atomic_uint num = {0};
 ppcode::LockFreeList<int> g_queue;
 
-ppcode::Logger::ptr g_logger = LOG_ROOT();
+static ppcode::Logger::ptr g_logger = LOG_ROOT();
 
 /*
 

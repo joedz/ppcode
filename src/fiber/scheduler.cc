@@ -1,149 +1,109 @@
 #include "scheduler.h"
+#include "processer.h"
+#include "fiber.h"
 #include "../log.h"
-#include "../util/macro.h"
-#include "../util/util.h"
 
 
-namespace ppcode{
-
-static thread_local Scheduler* t_scheduler;
-
+namespace ppcode {
 static Logger::ptr g_logger = LOG_ROOT();
 
-    void Scheduler::createFiber(const std::function<void()>& fn){
 
-        Fiber::ptr fb(new Fiber(fn));
+// 创建协程的接口    限制只能从这里创建协程
+void Scheduler::createFiber(const std::function<void()>& cb){
+    Fiber::ptr fb(new Fiber(cb));
 
-        // 协程设置 TODO
+    fb->getFiberState() = TaskState::reday;
 
-        fb->getFiberState() = TaskState::reday;
-        
-        // 协程私有数据 TODO
+    ++m_fiberNumber;
+    addFiber(fb);
+}
 
-        ++m_fiberNum;
-        addFiber(fb);
+// 调度器执行 创建协程执行器  
+void Scheduler::start(size_t threads, const std::string& name){
+
+    ASSERT_BT2(!m_isStart, "The scheduler cannot be started repeatedly");
+    m_isStart = true;
+    LOG_DEBUG(g_logger) << "The scheduler is starting. Threads=" << threads ;
+    // 当指定的协程数小于1时, 创建数量等于cpu数量
+    if(threads < 1) {
+        threads = Thread::hardware_concurrency();
     }
 
-    void Scheduler::start(size_t threads, const std::string& name){
-        MutexType::Lock lock(m_mutex);
+    m_name = name;
+    m_processerNumber = threads;
 
-        if(threads < 1) {
-            threads = Thread::hardware_concurrency();
-        }
+    Thread::SetThreadName(m_name);
 
-        m_name = name;
-        m_processerNum = threads;
+    for(size_t i = 0; i < m_processerNumber; ++i) {
+        createProcesser(i);
+    }
+}
 
-        Thread::SetThreadName(name);
-        ASSERT_BT(t_scheduler == nullptr);
-        //t_scheduler = this;
+// 调度器停止 运行, 并关闭所有执行器
+void Scheduler::stop(){
+    //ASSERT_BT2(!m_stopping, "The scheduler cannot be turned off repeatedly");
+    if(m_stopping) {
+        return;
+    }
 
-        auto mainProc = m_processers[0];
-
-        // 在调度器开始时默认创建了一个执行器 这里减一
-        for(size_t i = 0; i < threads - 1; ++i) {
-            newProcessThread(i);
-        }
-
-        // 创建定时器 TODO
+    // 这里的线程数不一定等于 m_processerNumber, 也许以后会有执行器被删除
+    size_t n = m_processers.size();
     
-        mainProc->Process();
-    }
-
-    void Scheduler::stop(){
-        
-        if(m_stop){
-            return;
+    for(size_t i = 0; i < n; ++i) {
+        auto p = m_processers[i];
+        if(p) {
+            // 唤醒执行器 执行stop方法
+            p->notify();
         }
-        m_stop = true;
+    } 
 
-        size_t n = m_processers.size();
-        for(size_t i = 0; i < n; ++i) {
-            auto p = m_processers[i];
-            if(p) {
-                p->NotifyCondition();
-            }
-        }
-        // 若存在定时器等其他线程或资源 进行统一删除
+    // 关闭其他线程  调度器  定时器  TODO
+}
 
-        if(m_dispatcherThread->joinable()) 
-            m_dispatcherThread->join();
-        else {
-            m_dispatcherThread->cancel();
-        }
+// 协程构造函数 单例
+Scheduler::Scheduler(){
+    LOG_DEBUG(g_logger) << "The Scheduler is being created";
+}
+
+// 析构函数 停止所有子线程
+Scheduler::~Scheduler(){
+    m_stopping = true;
+    stop();
+}
+// 添加协程到执行器
+void Scheduler::addFiber(Fiber::ptr fb){
+
+    auto proc = fb->getProcesser();
+
+    if(proc && proc->isRunning()) {
+        proc->addFiber(fb);
     }
 
-     bool& Scheduler::isExiting(){
-         static bool exit = false;
-         return exit;
-     }
+    auto it = std::min(m_guessesFibers.begin(), m_guessesFibers.end());
 
-     Scheduler* Scheduler::GetScheduler(){
-        //  if(t_scheduler)
-        //  return t_scheduler;
-        
-        
-        return t_scheduler;
-     }
+    size_t index = it - m_guessesFibers.begin();
 
+    auto procSptr = m_processers[index];
+    procSptr->addFiber(fb);
 
+    ++(*it);
+}
 
-    Scheduler::Scheduler(){
-        // TODO 创建一个默认的P
-        LOG_DEBUG(g_logger) << "Scheduler is create" << std::endl;
-        t_scheduler = this;
-        Processer::ptr procPtr = std::make_shared<Processer>(this, 0, "mainPro");
-        m_processers.push_back(procPtr);
-    }
+// 调度协程 
+void Scheduler::dispatcherThread(){
 
-    Scheduler::~Scheduler(){
-        isExiting() = true;
-        stop();
-        ASSERT_BT(m_stop);
-    }
-
-    void Scheduler::addFiber(Fiber::ptr fb){
-
-        auto proc = fb->getProcesser();
-        if(proc && proc->isActive() && proc->GetScheduler() == this) {
-            proc->AddFiber(fb);
-            return;
-        }
-
-        proc = Processer::GetCurrentProcesser();
-        if(proc && proc->isActive() && proc->GetScheduler() == this) {
-            proc->AddFiber(fb);
-            return;
-        }
-
-        size_t pcount = m_processers.size();
-        size_t idx = 0;
-
-        for (std::size_t i = 0; i < pcount; ++i, ++idx) {
-            idx = idx % pcount;
-            proc = m_processers[idx].get();
-            if (proc && proc->isActive())
-                break;
-        }
-         proc->AddFiber(fb);
-    }
-
-    void Scheduler::dispatcherThread(){
-        
-    }
-
-    void Scheduler::newProcessThread(size_t num){
-        
-        std::string thrName = m_name + "_" + std::to_string(num);
-
-        Processer::ptr p(new Processer(this,num, thrName));
-
-        Thread t( thrName, [this, p]{
-            p->Process();
-        });
-
-        t.detach();
-        m_processers.push_back(p);
-    }
+}
+// 创建协程执行器
+void Scheduler::createProcesser(size_t id){
     
-} // namespace ppcode
+    Processer::ptr proc = std::make_shared<Processer>(this, id);
+
+    const std::string thrName = m_name + "_" + std::to_string(id);
+
+    Thread t(thrName, std::bind(&Processer::execute, proc.get()));
+    t.detach();
+    m_processers.push_back(proc);
+}
+
+
+}

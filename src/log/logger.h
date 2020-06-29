@@ -50,7 +50,6 @@ public:
     // 设置root日志器
     void setRoot(Logger::ptr logger) { m_root = logger; }
 
-
     std::string getYamlString();
     YAML::Node getYamlNode();
 

@@ -120,7 +120,10 @@ public:
     ErrorFormatter(const std::string& str = "") {}
     virtual std::ostream& stream(std::ostream& ss,
                                  LogEvent::ptr event) override {
-        ss << "errno=" << errno;
+        if(errno != 0)
+        {
+            ss << "errno=" << errno;
+        }
         return ss;
     }
 };
@@ -131,6 +134,7 @@ public:
     ErrorStrFormatter(const std::string& str = "") {}
     virtual std::ostream& stream(std::ostream& ss,
                                  LogEvent::ptr event) override {
+        if(errno != 0)
         ss << "strerr=" << strerror(errno);
         return ss;
     }

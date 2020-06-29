@@ -12,7 +12,7 @@
 
 #ifndef __RELATIVE_PATH__
 // @brief 源文件名称 非路径名  通过cmake在编译时添加
-#define __RELATIVE_PATH__ __LINE__
+#define __RELATIVE_PATH__ __FILE__
 #endif
 
 

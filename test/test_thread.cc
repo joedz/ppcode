@@ -9,7 +9,7 @@
 
 using namespace ppcode;
 
-Logger::ptr g_logger = LOG_ROOT();
+static Logger::ptr g_logger = LOG_ROOT();
 
 void thread_fun1(int a, int b, int c) {
     uint32_t count = 0;
@@ -99,5 +99,5 @@ void test_mutex() {
 int main() {
     // test_thread();
 
-    test_mutex();
+    test_thread();
 }

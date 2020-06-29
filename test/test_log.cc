@@ -102,15 +102,15 @@ void test_log()
 
 int main()
 {
-	//test_Log_Level();
-	//test_log_init();
-	//test_append();
-	//test_event();
-	//test_format();
-	//test_logger();
-	//test_log();
+	test_Log_Level();
+	test_log_init();
+	test_append();
+	test_event();
+	test_format();
+	test_logger();
+	test_log();
 
-	//LOG_DEBUG(root_logger) << "massage";
-test_logger();
+	LOG_DEBUG(root_logger) << "massage";
+	test_logger();
 	return 0;
 }

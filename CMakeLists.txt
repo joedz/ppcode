@@ -6,9 +6,15 @@ include(./utils.cmake)
 link_directories( /usr/local/lib64 )
 
 
+execute_process(COMMAND "${PROJECT_SOURCE_DIR}/code/select_asm.sh" "${PROJECT_SOURCE_DIR}" "jump" OUTPUT_VARIABLE jump_asm_file)
+execute_process(COMMAND "${PROJECT_SOURCE_DIR}/code/select_asm.sh" "${PROJECT_SOURCE_DIR}" "make" OUTPUT_VARIABLE make_asm_file)
+
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
 ## g++ 编译选项
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O3 -fPIC -g -std=c++14 -Wall  -mcx16  -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined  -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -fPIC -g -std=c++14 -Wall  -mcx16 ")
+
 
 set(LIB_SRC
 
@@ -45,18 +51,23 @@ set(LIB_SRC
 ## os srcs
     src/os/os_linux.cc
     src/os/os_window.cc
+
+
+    ${make_asm_file}
+    ${jump_asm_file}
 )
 
+ENABLE_LANGUAGE( ASM)
+
 add_library(ppcode SHARED ${LIB_SRC})
+
 
 set(LIBS 
     ppcode
     pthread
     yaml-cpp
-    boost_context
-    boost_system
     boost_thread
-    
+    boost_system
 )
 
 #add_definitions(-Wno-builtin-macro-redefined)

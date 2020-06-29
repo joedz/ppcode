@@ -8,7 +8,7 @@
 
 namespace ppcode {
 
-#define default_log_formatter  "%D{%y-%m-%d %H:%M:%S}%T%t %N fiber=%F%T[%c] [%P]%T%f:%L%T%e %E%T%m%n"
+#define default_log_formatter  "%D{%y-%m-%d %H:%M:%S}%T%t %N fiber=%F%T[%c] [%P]%T%f:%L%T%e %E %m%n"
 
 // 默认的日志解析格式  must be correct
 
