@@ -3,19 +3,18 @@
 
 #include <iostream>
 
-#include "../src/fiber/context.h"
 #include "../src/util/macro.h"
 #include "../src/fiber/fiber.h"
 
 volatile bool isRuning = true;
 
 
-void test_swapIn(intptr_t param);
+void test_swapIn();
 
-ppcode::Context tctx(test_swapIn, 1234, 128 * 1024);
+ppcode::Fiber tctx(test_swapIn, 128 * 1024);
 
-void test_swapIn(intptr_t param) {
-    std::cout << "fun recv param:" << param << std::endl;
+void test_swapIn() {
+    
 
     int i;
     for (i = 1; i <= 30; i++) {

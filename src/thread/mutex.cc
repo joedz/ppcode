@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "../log.h"
+#include "../util/macro.h"
 
 namespace ppcode {
 
@@ -128,9 +129,11 @@ void Mutex::lock() {
         // Declare the state protected by MUTEX as consistent.
         pthread_mutex_consistent(&m_mutex);
     }
+
     if (rt) {
-        LOG_ERROR(g_logger) << "pthread_mutex_lock failed, rt=" << rt;
-        throw std::logic_error("pthread_mutex_lock failed,");
+        //LOG_ERROR(g_logger) << "pthread_mutex_lock failed, rt=" << rt;
+     //   ASSERT_BT(false);
+      //  throw std::logic_error("pthread_mutex_lock failed,");
     }
 }
 
@@ -156,8 +159,8 @@ bool Mutex::trylock() {
 void Mutex::unlock() {
     int rt = pthread_mutex_unlock(&m_mutex);
     if (rt) {
-        LOG_ERROR(g_logger) << "pthread_mutex_unlock failed, rt=" << rt;
-        throw std::logic_error("pthread_mutex_unlock failed,");
+     //   LOG_ERROR(g_logger) << "pthread_mutex_unlock failed, rt=" << rt;
+        //throw std::logic_error("pthread_mutex_unlock failed,");
     }
 }
 

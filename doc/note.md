@@ -16,8 +16,6 @@
 
 ```
 
-
-
 ```cpp
 typedef struct ucontext {
     struct ucontext *uc_link;
@@ -28,3 +26,5 @@ typedef struct ucontext {
 } ucontext_t;
 
 ```
+
+

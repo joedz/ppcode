@@ -13,7 +13,7 @@ execute_process(COMMAND "${PROJECT_SOURCE_DIR}/code/select_asm.sh" "${PROJECT_SO
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 ## g++ 编译选项
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -fPIC -g -std=c++14 -Wall  -mcx16 ")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -fPIC -g -std=c++14 -Wall  -mcx16 -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined -Wno-deprecated-declarations")
 
 
 set(LIB_SRC
@@ -24,8 +24,12 @@ set(LIB_SRC
 ## fiber src
 
     src/fiber/fiber.cc
+    src/fiber/timer.cc
     src/fiber/processer.cc
+    src/fiber/poller.cc
     src/fiber/scheduler.cc
+    src/fiber/hook.h
+    src/fiber/fdcontext.cc
 
 ##  log src
     src/log/log_appender.cc
@@ -63,6 +67,7 @@ add_library(ppcode SHARED ${LIB_SRC})
 
 
 set(LIBS 
+    dl
     ppcode
     pthread
     yaml-cpp
@@ -80,8 +85,9 @@ ppcode_add_executable(test_thread "test/test_thread.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_lockfreelist "test/test_lockfreelist.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_yaml "test/test_yaml.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_config "test/test_config.cc" ppcode "${LIBS}")
-ppcode_add_executable(test_coroutines "test/test_coroutines.cc" ppcode "${LIBS}")
+#ppcode_add_executable(test_coroutines "test/test_coroutines.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_sche "test/test_sche.cc" ppcode "${LIBS}")
+ppcode_add_executable(test_hook "test/test_hook.cc" ppcode "${LIBS}")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

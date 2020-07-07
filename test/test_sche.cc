@@ -4,56 +4,101 @@
 #include "../src/thread.h"
 #include "../src/fiber/processer.h"
 #include "../src/fiber/scheduler.h"
+//#include "../src/fiber/fiber_warp.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include<netinet/in.h>
 
  static ppcode::Logger::ptr g_logger = LOG_ROOT();
 
+using namespace ppcode;
 
-ppcode::Scheduler* sche = new ppcode::Scheduler();
+static Scheduler* sche = new Scheduler();
 
-void fun_product() {
-    for(int i = 0; i < 100; ++i) {
-        sche->createFiber([i](){
-            std::cout << i << std::endl;
-        });
-    }
+
+std::atomic_uint32_t g_count {0};
+
+void fun1() {
+    LOG_INFO(g_logger)  << g_count;
+    ++ g_count;
+
+    ppcode::Processer::toYield();
+
+    LOG_INFO(g_logger)  << g_count;
 }
 
-void test_scheduler(){
+auto fun2 = [](){
+    // LOG_INFO(g_logger)  << g_count;
+    // ++ g_count;
+};
 
-    sche->start(3);
+void test_socket(Poller* poller ) {
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    
+    fcntl(fd, F_SETFL, O_NONBLOCK);
+    
+    sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(80);
+    addr.sin_addr.s_addr = inet_addr("180.101.49.12");
+
+     connect(fd, (const sockaddr*)&addr, sizeof(addr));
+
+    poller->addEvent(fd, FdContext::Event::READ, [](){
+        LOG_INFO(g_logger) << "connection read" ;
+    });
+ 
+    
+    poller->addEvent(fd, FdContext::Event::WRITE, [=](){
+         LOG_INFO(g_logger) << "connection write" ;
+        //poller->cancelEvent(fd, FdContext::Event::READ);
+       
+         close(fd);
+    });
+    
+    //poller->cancelEvent(fd, FdContext::Event::WRITE);
+    //poller->addEvent()
 
 }
 
 
 int main() {
+    sche->start();
+    //Poller* poller = sche->getPoller();
 
-test_scheduler();
+    sche->createFiber(fun1);
+    sleep(3);
+    //test_socket(poller);
+    // int i = 100000;
+    // while(i--)
+    // poller->createTimer(fun1, 2, true);
 
-sleep(4);
-ppcode::Thread::ptr product(new ppcode::Thread("processer", fun_product));
+    // i = 100000;
+    // while(i--)
+    // poller->createTimer(fun2, 1, true);
 
-product->join();
+
+    sleep(3);
+    
+    LOG_INFO(g_logger)  << g_count;
+    delete sche;
+
+
+
+
 
 }
 
 
 
-// ppcode::Processer proc(1);
-
-// 接口已经被改动 
-// void test_processer() {
-//     proc.start();
-// }
 
 
 
-// void test_proc(){
-    
-//     //ppcode::Thread::ptr proc(new ppcode::Thread("processer", test_processer));
 
-//     //ppcode::Thread::ptr product(new ppcode::Thread("product", fun_product));
 
-//     //proc->join();
-//     //product->join();
-// }
+

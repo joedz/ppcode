@@ -5,23 +5,27 @@
 namespace ppcode {
 
 static Logger::ptr g_logger = LOG_ROOT();
-static thread_local Fiber* t_fiber = nullptr;
+//static thread_local Fiber* t_fiber = nullptr;
+static thread_local Fiber::ptr t_fiber;
 
 // 构造方法
 Processer::Processer(Scheduler* sche, uint32_t id)
-:m_id(id),
- m_sche(sche){
+: m_id(id),
+m_sche(sche)
+{
     LOG_DEBUG(g_logger) << "Processer is start, and num=" << m_id;
+    m_state = TaskState::init;
 }
 
 Processer::~Processer(){
-    m_stopping = true;
+
     LOG_DEBUG(g_logger) << "Processer is end, and num=" << m_id
-        << " but have fiber=" << m_fiberSize;
-
-    ASSERT_BT(m_stopping);
+       << " .a total of " <<  m_FiberCount << " fibers have been exectued. "
+       << m_swithCount << " times have been switched, " 
+       << m_yieldCount  << " times have been blocked, and "
+       << m_fiberSize << " fibers have not been executed.";
+    m_state = TaskState::stop;
 }
-
 
 // 协程切出
 void Processer::toYield(){
@@ -32,9 +36,8 @@ void Processer::toYield(){
 // 协程切出
 void Processer::yield(){
     ++m_yieldCount;
-
-    Fiber* fb = getCurrentFiber();
-
+    Fiber::ptr fb = getCurrentFiber();
+    fb->getFiberState() = TaskState::block;
     fb->SwapOut();
 }
 
@@ -43,13 +46,12 @@ void Processer::yield(){
 // // 阻塞
 // void suspend();
 // 获取执行器
-
 Processer* & Processer::getThis(){
     static thread_local Processer* proc = nullptr;
     return proc; 
 }
 
-Fiber* Processer::getCurrentFiber(){
+Fiber::ptr Processer::getCurrentFiber(){
     return t_fiber;
 }
 
@@ -58,27 +60,25 @@ void Processer::addFiber(Fiber::ptr fiber){
 
     //MutexType::lock lock(m_mutex);
     //newQueue.push(fiber);
-
     //Fiber* fb = fiber.get();
+    if(m_state == TaskState::stop ||
+        m_state == TaskState::done) {
+        return;        
+    }
 
     while(! newQueue.push(fiber)) {}
     ++m_fiberSize;
 
-    if(!m_running) {
+    if(!isRunning()) {
         this->notify();
     } else {
         m_notidied = true;
     }
-
 }
 
-// 添加多个协程  加锁
+// 添加多个协程 
 void Processer::addFibers(std::list<Fiber::ptr>& list){
-    //MutexType::lock lock(m_mutex);
-
-   //Fiber* fb;
    Fiber::ptr fb;
-
     m_fiberSize += list.size();
 
     while(list.empty()) {
@@ -87,7 +87,7 @@ void Processer::addFibers(std::list<Fiber::ptr>& list){
         while(!newQueue.push(fb));
     }
 
-    if(!m_running) {
+    if(!isRunning()) {
         this->notify();
     } else {
         m_notidied = true;
@@ -95,15 +95,15 @@ void Processer::addFibers(std::list<Fiber::ptr>& list){
 }
 
 // 调度器执行使执行器执行
-void Processer::start(){
-    // 线程执行这个函数
-    execute();
-}
+// void Processer::start(){
+//     // 线程执行这个函数
+//     execute();
+// }
 
 //  调度器通知等待的执行器
 void Processer::notify(){
-//  MutexType::Lock lock(m_mutex);
-//  m_cv.notify_all();
+ MutexType::Lock lock(m_mutex);
+ m_cv.notify_all();
 }
 
 // 执行器执行
@@ -111,6 +111,7 @@ void Processer::execute(){
     getThis() = this;
     LOG_ERROR(g_logger) << "product num=" << m_id << " is execute";
 
+    m_state = TaskState::running;
     while(!m_sche->isStopping()) {
         Fiber::ptr fb;
         runableQueue.pop(fb);
@@ -121,11 +122,12 @@ void Processer::execute(){
             continue;
             //runableQueue.pop(t_fiber);
             if(!fb){
-                waitting();
+                idle(); // 
             }
         }
 
         while(fb && !m_sche->isStopping()) {
+            t_fiber = fb;
             fb->getFiberState() = TaskState::running;
             fb->getProcesser() = this;
 
@@ -155,11 +157,14 @@ void Processer::execute(){
                     std::exception_ptr ep = fb->getExcetionPtr();
                     std::rethrow_exception(ep);
                 }
+                ++m_FiberCount;
                 break;
             }
             fb = nullptr;
         }
     }
+
+    
 }
 
 // gc回收
@@ -199,13 +204,15 @@ void Processer::getNewFibers(){
 }
 
 // 获取当前调度器
-void Processer::getScheduler(){
-    // UNDO
+Scheduler* Processer::getScheduler(){
+    return m_sche;
 }
 
 // 执行器等待时的方法
-void Processer::waitting(){
+void Processer::idle(){
     this->gc();
+
+    // steal TODO
 
     MutexType::Lock lock(m_mutex);
     LOG_ERROR(g_logger) << "product num=" << m_id << " is waitting";
@@ -215,9 +222,9 @@ void Processer::waitting(){
         return;
     }
 
-    m_running = false;
+    m_state = TaskState::idle;
     m_cv.wait(m_mutex);
-    m_running = true;
+    m_state = TaskState::running;
 }
 
 }
