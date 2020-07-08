@@ -1,6 +1,5 @@
 #include <ucontext.h>
 
-
 #include <iostream>
 
 #include "../src/util/macro.h"
@@ -8,14 +7,12 @@
 
 volatile bool isRuning = true;
 
-
 void test_swapIn();
 
 ppcode::Fiber tctx(test_swapIn, 128 * 1024);
 
 void test_swapIn() {
     
-
     int i;
     for (i = 1; i <= 30; i++) {
         std::cout << "func loop: " << i << std::endl;
@@ -28,7 +25,7 @@ void test_swapIn() {
 
 void test_context() {
     
-     tctx.SwapIn();
+    tctx.SwapIn();
     
     int i = 0;
     for (i = 1; i <= 30; ++i) {
@@ -38,7 +35,6 @@ void test_context() {
         // 保存当前上下文 切换上下文
         tctx.SwapIn();
     }
-
     std::cout << " main end  main loop" << i << " recv ret="  
               << std::endl; 
 }
@@ -82,8 +78,6 @@ void test_make_jump() {
               << std::endl;
 }
 
-
 int main() { 
     test_context();
- }
-
+}
