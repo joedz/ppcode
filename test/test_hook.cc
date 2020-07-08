@@ -33,6 +33,6 @@ int main(){
 
 
     getchar();
-
+    sleep(10000);
 
 }

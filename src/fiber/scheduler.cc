@@ -30,7 +30,6 @@ Scheduler::Scheduler(size_t threads, const std::string& name)
         threads = Thread::hardware_concurrency();
     }
     m_processerNumber = threads;
-
 }
 
 // 调度器执行 创建协程执行器  

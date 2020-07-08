@@ -30,6 +30,7 @@ void hook_init() {
     if(is_inited){
         return;
     }
+
     sleep_f         = (sleep_fun)       dlsym(((void *) -1l) , "sleep");
     usleep_f        = (usleep_fun)      dlsym(((void *) -1l), "usleep");
     nanosleep_f     = (nanosleep_fun)   dlsym(((void *) -1l), "nanosleep"); 
@@ -316,7 +317,7 @@ int close(int fd) {
 ************************ read 系列函数hook *********************************
 ****************************************************************************
 */
- ssize_t read(int fd, void *buf, size_t count) {
+ssize_t read(int fd, void *buf, size_t count) {
     return do_io(fd, read_f, "read", ppcode::FdContext::READ, SO_RCVTIMEO, buf, count);
 }
 

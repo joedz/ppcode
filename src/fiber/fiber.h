@@ -64,8 +64,8 @@ public:
 };
 
 class Processer;
-// : public std::enable_shared_from_this<Fiber>
-class Fiber  {
+// 
+class Fiber : public std::enable_shared_from_this<Fiber> {
 public:
     using ptr = std::shared_ptr<Fiber>;
 
