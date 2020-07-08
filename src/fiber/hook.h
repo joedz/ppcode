@@ -9,10 +9,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-
-
-#include "scheduler.h"
-
 namespace ppcode {
     bool is_hook_enable();
     void set_hook_enable(bool flag);
@@ -106,7 +102,6 @@ extern sendmsg_fun sendmsg_f;
 */
 
 typedef int (*fcntl_fun)(int fd, int cmd, ... /* arg */ );
-
 extern fcntl_fun fcntl_f;
 
 typedef int (*ioctl_fun)(int fd, unsigned long int request, ...);

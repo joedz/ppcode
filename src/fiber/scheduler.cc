@@ -1,14 +1,11 @@
 #include "scheduler.h"
-#include "processer.h"
 #include "fiber.h"
 #include "../log.h"
-#include "poller.h"
-
 
 namespace ppcode {
 static Logger::ptr g_logger = LOG_ROOT();
 
-static thread_local Scheduler::ptr t_scheduler = nullptr;
+static  Scheduler::ptr t_scheduler = nullptr;
 
 
 

@@ -1,14 +1,15 @@
 #include "fdcontext.h"
-#include "../log.h"
-#include "hook.h"
 
+//#include "../log.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include "hook.h"
 
 namespace ppcode{   
 
-static Logger::ptr g_logger = LOG_ROOT();
+//static Logger::ptr g_logger = LOG_ROOT();
 
 FdCtx::FdCtx(int fd)
 :m_fd(fd){
@@ -20,7 +21,7 @@ void FdCtx::init(){
 
     if(fstat(m_fd, &st) == -1) {
         m_isSocket = false;
-        LOG_DEBUG(g_logger) << "The wrong file descriptor may have been used";
+        //LOG_DEBUG(g_logger) << "The wrong file descriptor may have been used";
     } else {
         m_isSocket = S_ISSOCK(st.st_mode);
     }

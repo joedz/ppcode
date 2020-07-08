@@ -10,9 +10,9 @@
 #include "../thread.h"
 #include "poller.h"
 
+
 namespace ppcode {
-
-
+    
 // 协程调度器
 class Scheduler {
 public:
@@ -70,9 +70,5 @@ protected:
     Poller* m_poller;
     Thread::ptr m_threadPoller;
 };
-
-
-
-
 
 }

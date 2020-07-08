@@ -22,14 +22,14 @@ set(LIB_SRC
     src/config/config.cc
 
 ## fiber src
-
+    src/fiber/hook.cc
     src/fiber/fiber.cc
     src/fiber/timer.cc
     src/fiber/processer.cc
     src/fiber/poller.cc
     src/fiber/scheduler.cc
-    src/fiber/hook.h
     src/fiber/fdcontext.cc
+
 
 ##  log src
     src/log/log_appender.cc
@@ -67,8 +67,8 @@ add_library(ppcode SHARED ${LIB_SRC})
 
 
 set(LIBS 
-    dl
     ppcode
+    dl
     pthread
     yaml-cpp
     boost_thread

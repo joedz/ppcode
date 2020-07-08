@@ -1,21 +1,10 @@
-
-
-
+#include "hook.h"
 #include "scheduler.h"
-#include "processer.h"
-#include "timer.h"
-#include "fiber.h"
-#include "poller.h"
 #include "../log.h"
 #include "fdcontext.h"
-
-
-#include "hook.h"
-
-#include <dlfcn.h>
-#include <cstdarg>
-
 #include "../config/config.h"
+#include <cstdarg>
+#include <dlfcn.h>
 
 namespace ppcode {
 static Logger::ptr g_logger = LOG_ROOT();
@@ -25,6 +14,7 @@ static thread_local bool t_hook_enable = false;
 bool is_hook_enable() {
     return t_hook_enable;
 }
+
 void set_hook_enable(bool flag) {
     t_hook_enable = flag;
 }
@@ -40,27 +30,27 @@ void hook_init() {
     if(is_inited){
         return;
     }
-    sleep_f = (sleep_fun)dlsym(((void *) -1l) , "sleep");
-    usleep_f = (usleep_fun)dlsym(((void *) -1l), "usleep");
-    nanosleep_f = (nanosleep_fun)dlsym(((void *) -1l), "nanosleep"); 
-    socket_f = (socket_fun)dlsym(((void *) -1l), "socket"); 
-    connect_f = (connect_fun)dlsym(((void *) -1l), "connect"); 
-    accept_f = (accept_fun)dlsym(((void *) -1l), "accept"); 
-    read_f = (read_fun)dlsym(((void *) -1l), "read");
-    readv_f = (readv_fun)dlsym(((void *) -1l), "readv");
-    recv_f = (recv_fun)dlsym(((void *) -1l), "recv");
-    recvfrom_f = (recvfrom_fun)dlsym(((void *) -1l), "recvfrom"); 
-    recvmsg_f = (recvmsg_fun)dlsym(((void *) -1l), "recvmsg");
-    write_f = (write_fun)dlsym(((void *) -1l), "write"); 
-    writev_f = (writev_fun)dlsym(((void *) -1l), "writev");
-    send_f = (send_fun)dlsym(((void *) -1l), "send");
-    sendto_f = (sendto_fun)dlsym(((void *) -1l), "sendto"); 
-    sendmsg_f = (sendmsg_fun)dlsym(((void *) -1l), "sendmsg"); 
-    close_f = (close_fun)dlsym(((void *) -1l), "close");
-    fcntl_f = (fcntl_fun)dlsym(((void *) -1l), "fcntl"); 
-    ioctl_f = (ioctl_fun)dlsym(((void *) -1l) , "ioctl"); 
-    getsockopt_f = (getsockopt_fun)dlsym(((void *) -1l), "getsockopt"); 
-    setsockopt_f = (setsockopt_fun)dlsym(((void *) -1l), "setsockopt");;
+    sleep_f         = (sleep_fun)       dlsym(((void *) -1l) , "sleep");
+    usleep_f        = (usleep_fun)      dlsym(((void *) -1l), "usleep");
+    nanosleep_f     = (nanosleep_fun)   dlsym(((void *) -1l), "nanosleep"); 
+    socket_f        = (socket_fun)      dlsym(((void *) -1l), "socket"); 
+    connect_f       = (connect_fun)     dlsym(((void *) -1l), "connect"); 
+    accept_f        = (accept_fun)      dlsym(((void *) -1l), "accept"); 
+    read_f          = (read_fun)        dlsym(((void *) -1l), "read");
+    readv_f         = (readv_fun)       dlsym(((void *) -1l), "readv");
+    recv_f          = (recv_fun)        dlsym(((void *) -1l), "recv");
+    recvfrom_f      = (recvfrom_fun)    dlsym(((void *) -1l), "recvfrom"); 
+    recvmsg_f       = (recvmsg_fun)     dlsym(((void *) -1l), "recvmsg");
+    write_f         = (write_fun)       dlsym(((void *) -1l), "write"); 
+    writev_f        = (writev_fun)      dlsym(((void *) -1l), "writev");
+    send_f          = (send_fun)        dlsym(((void *) -1l), "send");
+    sendto_f        = (sendto_fun)      dlsym(((void *) -1l), "sendto"); 
+    sendmsg_f       = (sendmsg_fun)     dlsym(((void *) -1l), "sendmsg"); 
+    close_f         = (close_fun)       dlsym(((void *) -1l), "close");
+    fcntl_f         = (fcntl_fun)       dlsym(((void *) -1l), "fcntl"); 
+    ioctl_f         = (ioctl_fun)       dlsym(((void *) -1l) , "ioctl"); 
+    getsockopt_f    = (getsockopt_fun)  dlsym(((void *) -1l), "getsockopt"); 
+    setsockopt_f    = (setsockopt_fun)  dlsym(((void *) -1l), "setsockopt");;
 }
 
 // 使用全局静态变量的方式进初始化
@@ -69,21 +59,21 @@ static struct _HookIniter {
         hook_init();
         
         //TODO
-        set_hook_enable(true);
+        //set_hook_enable(true);
 
-        s_connect_timeout = g_tcp_connect_timeout->getValue();
-        g_tcp_connect_timeout->addListener([](const int& old_value, const int& new_value){
-            LOG_INFO(g_logger) << "tcp connect timeout changed from"
-                << old_value << " ot " << new_value;
-            s_connect_timeout = new_value;
-        });
+       // s_connect_timeout = g_tcp_connect_timeout->getValue();
+        // g_tcp_connect_timeout->addListener([](const int& old_value, const int& new_value){
+        //     LOG_INFO(g_logger) << "tcp connect timeout changed from"
+        //         << old_value << " ot " << new_value;
+        //     s_connect_timeout = new_value;
+        // });
     }
 }s_hook_initer;
 
 
-
-
 } // end namespace ppcode
+
+
 
 struct timer_info {
     int canclelled = 0;  
@@ -171,29 +161,33 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_fun_name, uint32_t 
 
 extern "C" {
 
-//sleep_fun sleep_f = nullptr;
+/*
+****************************************************************************
+**************************** hook函数列表 ***********************************
+****************************************************************************
+*/
 
-sleep_fun sleep_f = nullptr;
-usleep_fun usleep_f = nullptr;
-nanosleep_fun nanosleep_f = nullptr;
-socket_fun socket_f = nullptr;
-connect_fun connect_f = nullptr;
-accept_fun accept_f = nullptr;
-read_fun read_f = nullptr;
-readv_fun readv_f = nullptr;
-recv_fun recv_f = nullptr;
-recvfrom_fun recvfrom_f = nullptr;
-recvmsg_fun recvmsg_f = nullptr;
-write_fun write_f = nullptr;
-writev_fun writev_f = nullptr;
-send_fun send_f = nullptr; 
-sendto_fun sendto_f = nullptr; 
-sendmsg_fun sendmsg_f = nullptr;
-close_fun close_f = nullptr;
-fcntl_fun fcntl_f = nullptr;
-ioctl_fun ioctl_f = nullptr;
-getsockopt_fun getsockopt_f = nullptr; 
-setsockopt_fun setsockopt_f = nullptr;;
+sleep_fun       sleep_f      = nullptr;
+usleep_fun      usleep_f     = nullptr;
+nanosleep_fun   nanosleep_f  = nullptr;
+socket_fun      socket_f     = nullptr;
+connect_fun     connect_f    = nullptr;
+accept_fun      accept_f     = nullptr;
+read_fun        read_f       = nullptr;
+readv_fun       readv_f      = nullptr;
+recv_fun        recv_f       = nullptr;
+recvfrom_fun    recvfrom_f   = nullptr;
+recvmsg_fun     recvmsg_f    = nullptr;
+write_fun       write_f      = nullptr;
+writev_fun      writev_f     = nullptr;
+send_fun        send_f       = nullptr; 
+sendto_fun      sendto_f     = nullptr; 
+sendmsg_fun     sendmsg_f    = nullptr;
+close_fun       close_f      = nullptr;
+fcntl_fun       fcntl_f      = nullptr;
+ioctl_fun       ioctl_f      = nullptr;
+getsockopt_fun  getsockopt_f = nullptr; 
+setsockopt_fun  setsockopt_f = nullptr;;
 
 
 /*

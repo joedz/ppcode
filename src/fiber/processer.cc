@@ -1,7 +1,9 @@
+#include "hook.h"
+#include "scheduler.h"
 #include "processer.h"
 #include "../util/macro.h"
 #include "../log.h"
-#include "scheduler.h"
+
 namespace ppcode {
 
 static Logger::ptr g_logger = LOG_ROOT();
@@ -110,7 +112,7 @@ void Processer::notify(){
 void Processer::execute(){
     getThis() = this;
     LOG_ERROR(g_logger) << "product num=" << m_id << " is execute";
-
+    set_hook_enable(true);
     m_state = TaskState::running;
     while(!m_sche->isStopping()) {
         Fiber::ptr fb;
