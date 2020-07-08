@@ -4,6 +4,7 @@
 #include "../util/macro.h"
 #include "../log.h"
 
+
 namespace ppcode {
 
 static Logger::ptr g_logger = LOG_ROOT();
@@ -165,8 +166,6 @@ void Processer::execute(){
             fb = nullptr;
         }
     }
-
-    
 }
 
 // gc回收

@@ -67,8 +67,8 @@ add_library(ppcode SHARED ${LIB_SRC})
 
 
 set(LIBS 
-    ppcode
     dl
+    ppcode
     pthread
     yaml-cpp
     boost_thread

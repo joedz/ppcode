@@ -66,7 +66,6 @@ public:
 private:
     void resize(size_t size); 
 protected:
-    // 已经加锁 无需再加锁
     void onTimerInsertedAtFront() override;
 private:
     Epoll m_epoll;
