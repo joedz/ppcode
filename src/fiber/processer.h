@@ -26,19 +26,10 @@ public:
     Processer(Scheduler*, uint32_t id);
     ~Processer();
 
-// 为协程提供的方法
-
     // 协程切出
     static void toYield();
     // 协程切出
     void yield();
-    // TODO
-    // 阻塞
-    // static void Suspend();
-    // // 阻塞
-    // void suspend();
-    // 获取执行器
-    //void steal();
 
     static Processer*& getThis();
     static Fiber::ptr getCurrentFiber();
@@ -51,22 +42,20 @@ public:
     // 执行器是否在执行协程
     bool isRunning() { return m_state == TaskState::running;}
     // 执行器是否在等待
-    bool isWaitting() { return m_state == TaskState::block;}
+    bool isWaitting() { return m_state == TaskState::idle;}
     // 执行器是否已经停止
     bool isStop() { return m_state == TaskState::done;}
-    // 执行器处于执行状态
+    // 执行器处于阻塞执行状态 此时协程正在执行 但是由于协程处于阻塞状态,但是此时可以被其他执行器窃取协程
     bool isBlock() { return m_state == TaskState::block;}
 
     TaskState getState() const { return m_state.load();}
     void setState(TaskState state)  { m_state.store(state);}
 
     // 执行器中的协程个数 0
-    uint64_t filberSize() { return m_fiberSize;}
+    uint64_t filberSize() { return m_newfiberCount;}
 
     //  调度器通知等待的执行器
      void notify();
-
-// both
 
 //调度器本身方法
     // 执行器执行
@@ -84,19 +73,22 @@ public:
 protected:
     // 执行器id ,对应在调度器的位置
     uint32_t m_id;
+
     // 新加入的协程数量
-    std::atomic<unsigned long> m_fiberSize{0};
+    std::atomic<unsigned long> m_newfiberCount{0};
+
     // 现有的可运行的协程数量   TODO 可能被其他线程访问 原子 ?? 
     unsigned long m_nowFiberSize = 0;
     // 协程阻塞的次数
     uint64_t m_yieldCount = 0;
     // 协程切换的次数
     uint64_t m_swithCount = 0;
+    // 执行的协程数量,
     uint64_t m_FiberCount = 0;
-// 执行队列的选取问题 UNDO
+    // 执行队列的选取问题 UNDO
 
     // 协程可运行队列 
-    fiberQueue runableQueue;
+    std::list<Fiber::ptr> runableQueue;
     // 协程阻塞队列
     fiberQueue waitQueue;
     // 协程新加入队列

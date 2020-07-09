@@ -70,6 +70,7 @@ void Scheduler::addFiber(Fiber::ptr fb){
 
     if(proc && proc->isRunning()) {
         proc->addFiber(fb);
+        return;
     }
 
     // 找到一个空闲的执行器  找到一个空闲协程,并将其唤醒
@@ -86,7 +87,9 @@ void Scheduler::addFiber(Fiber::ptr fb){
 
     for(size_t i = 0; i < n; ++i) {
         auto& procSptr = m_processers[id];
-        if(!procSptr->isBlock()){ //  如果当前协程处于阻塞状态 那么暂时放弃将协程加入
+
+        // 如果当前协程处于阻塞状态 那么暂时放弃将协程加入
+        if(!procSptr->isBlock()){ 
             procSptr->addFiber(fb);
             id = (id + 1) % n;
            return;
@@ -98,7 +101,6 @@ void Scheduler::addFiber(Fiber::ptr fb){
     auto& procSptr = m_processers[id];
     procSptr->addFiber(fb);
     id = (id + 1) % n;
-    
 }
 
 // 调度协程 
@@ -113,7 +115,7 @@ Scheduler::~Scheduler(){
         m_state = TaskState::stop;
         stop();
     }
-    LOG_DEBUG(g_logger) << "The scheduler is finished";
+    LOG_DEBUG(g_logger) << "The scheduler is finished. There are " << m_fiberNumber <<" coroutines created";
 }
 
 // 调度器停止 运行, 并关闭所有执行器
@@ -128,7 +130,6 @@ void Scheduler::stop(){
             // 唤醒执行器 执行stop方法
             p->setState(TaskState::stop);
             p->notify();
-
         }
     }
    

@@ -58,7 +58,7 @@ void* Thread::run(void* arg) {
     cb();
 
     //线程正常结束后将调用这里
-    LOG_INFO(g_logger) << "thread end";
+//    LOG_INFO(g_logger) << "thread end";
     
     pthread_exit(nullptr);
 }

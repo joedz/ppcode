@@ -72,7 +72,7 @@ void Fiber::run() {
         LOG_ERROR(g_logger) << "An exception was caught";
         m_eptr = std::current_exception();
     }
-
+    
     m_state = TaskState::done;
     // 将协程切出或者删除
     SwapOut();

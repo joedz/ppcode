@@ -77,8 +77,4 @@ private:
     Scheduler* m_sche;
 };
 
-
-
-
-
 } // namespace ppcode

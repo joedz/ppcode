@@ -63,9 +63,7 @@ bool TimerTask::reset(uint64_t ms, bool from_now){
     if(it == m_timer->m_tasks.end()) {
         return false;
     }
-    
     m_timer->m_tasks.erase(it);
-
     uint64_t start = 0;
     if(from_now) {
         start = GetCurrentMS();
@@ -74,7 +72,6 @@ bool TimerTask::reset(uint64_t ms, bool from_now){
     }
     m_ms = ms;
     m_next = start + m_ms;
-
     m_timer->addTimerTask(shared_from_this(), lock);
     return true;
 }
@@ -175,10 +172,12 @@ void Timer::getExecuteTask(std::vector<std::function<void()> >&  cbs){
         return;
     }
 
-    TimerTask::ptr now_task(new TimerTask(nullptr,now_ms,nullptr));
+    TimerTask::ptr now_task(new TimerTask(nullptr,0,nullptr));
 
     // 获取所有超时的定时器任务 
     auto it = rollover ? m_tasks.end(): m_tasks.lower_bound(now_task);
+
+    // LOG_INFO(g_logger) << (*it)->m_ms << (*it)->m_next;
     // 如果存在有定时器任务等于现在的时间,那么也将任务加入定时器中
     while(it != m_tasks.end() && (*it)->m_next == now_ms) {
         ++it;

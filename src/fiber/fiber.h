@@ -19,8 +19,6 @@ enum class TaskState {
 
 std::string ToStringTaskState(TaskState state);
 
-
-
 /*
 协程状态 
     可运行      协程被创建或者正在执行 处于可运行状态   
@@ -50,8 +48,6 @@ IO协程调度 定时器特殊状态
     idle状态  空闲状态 此时处于epoll_wait状态
 */
 
-
-
 using Fn_t = void (*)(intptr_t);
 class AllocMemory{
 public:
@@ -64,7 +60,7 @@ public:
 };
 
 class Processer;
-// 
+
 class Fiber : public std::enable_shared_from_this<Fiber> {
 public:
     using ptr = std::shared_ptr<Fiber>;
@@ -92,13 +88,13 @@ public:
 
     INLINE TaskState& getFiberState() { return m_state; }
 
-    //INLINE Processer*& getProcesser() { return m_proc;}
-
     INLINE uint64_t& getYieldCount() { return m_yieldCount;}
 
     INLINE Processer*& getProcesser() { return m_proc;}
 
     INLINE std::exception_ptr getExcetionPtr() { return m_eptr;}
+
+    INLINE Fiber::ptr getThis() { return shared_from_this();}
 
 private:
 
@@ -120,7 +116,6 @@ private:
     uint64_t m_id;               // 协程id
     uint64_t m_yieldCount = 0;       // 协程切出次数
     Processer* m_proc = nullptr;           // 协程执行器
-     std::exception_ptr m_eptr = nullptr;   // 异常处理
+    std::exception_ptr m_eptr = nullptr;   // 异常处理
 };
-
 }  // namespace ppcode

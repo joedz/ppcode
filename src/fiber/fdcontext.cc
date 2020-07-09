@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include "hook.h"
 
 namespace ppcode{   

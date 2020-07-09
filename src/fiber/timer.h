@@ -53,7 +53,7 @@ public:
     TimerTask::ptr createCondTimer(const std::function<void()>& cb, std::weak_ptr<void> weak_cond, uint64_t ms, bool recurring = false);
 
     uint64_t getNextExecuteTime();
-    void getExecuteTask(std::vector<std::function<void()> >&  cbs);
+    void getExecuteTask(std::vector<std::function<void()> >& cbs);
 
     bool hasTimer();
 protected:
@@ -68,6 +68,5 @@ protected:
     bool m_tickled = false;
     uint64_t m_previouseTime = 0;
 };
-
 
 }

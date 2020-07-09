@@ -28,12 +28,14 @@ auto fun2 = []() {
 };
 
 void fun1() {
-    LOG_INFO(g_logger) << g_count;
+    LOG_INFO(g_logger) << "begin";
     ++g_count;
 
-   // ppcode::Processer::toYield();
+    ppcode::Processer::toYield();
+
     //poller->createTimer(fun2, 2, true);
-   // LOG_INFO(g_logger) << g_count;
+
+    LOG_INFO(g_logger) << "end";
 }
 
 
@@ -67,13 +69,13 @@ int main() {
     sche->start();
     
     Poller* poller = sche->getPoller();
-    sche->createFiber(fun1);
+    //sche->createFiber(fun1);
     //sleep(3);
     test_socket(poller);
     //int i = 100000;
    // while(i--)
 
-     poller->createTimer(fun1, 2, true);
+    //poller->createTimer(fun1, 2, true);
 
     // i = 100000;
     // while(i--)

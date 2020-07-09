@@ -168,12 +168,29 @@ void test_config_log(){
 
 }
 
+static ppcode::ConfigVar<int>::ptr g_tcp_connect_timeout = ppcode::Config::Lookup("tcp.connect.timeout", 5000, "tcp.connect.timeout");
+static uint64_t s_connect_timeout = 4000;
+
+void test_get_set_value() {
+    LOG_INFO(g_logger) << "s_connect_timeout =" << s_connect_timeout;
+        s_connect_timeout = g_tcp_connect_timeout->getValue();
+        g_tcp_connect_timeout->addListener([](const int& old_value, const int& new_value){
+            LOG_INFO(g_logger) << "tcp connect timeout changed from"
+                << old_value << " to " << new_value;
+            s_connect_timeout = new_value;
+        });
+
+    LOG_INFO(g_logger) << "s_connect_timeout =" << s_connect_timeout;
+}
+
+
 
 int main() { 
     //test_config(); 
-
    // test_more_type();
    // test_load_config_file();
-    test_config_log();
-    
+    //test_config_log();
+
+
+    test_get_set_value();
 }

@@ -111,7 +111,7 @@ public:
             if (v == m_val) {
                 return;
             }
-            // TODO
+            
             for(auto& it : m_cbs) {
                 it.second(m_val, v);
             }
@@ -150,7 +150,7 @@ public:
     }
     
 private:
-    RWMutex m_mutex;
+    RWMutexType m_mutex;
     T m_val;
     std::map<uint64_t, on_change_cb> m_cbs;
 };
@@ -192,6 +192,8 @@ public:
             typename ConfigVar<T>::ptr value( new ConfigVar<T>(name, default_value, description));
             
             GetDatas()[name] = value;
+
+            LOG_INFO(LOG_ROOT()) << "description" << value->getDescription() << std::endl;
             return value;
         }
 

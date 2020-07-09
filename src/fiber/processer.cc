@@ -16,17 +16,16 @@ Processer::Processer(Scheduler* sche, uint32_t id)
 : m_id(id),
 m_sche(sche)
 {
-    LOG_DEBUG(g_logger) << "Processer is start, and num=" << m_id;
+   // LOG_DEBUG(g_logger) << "Processer is start, and num=" << m_id;
     m_state = TaskState::init;
 }
 
 Processer::~Processer(){
-
     LOG_DEBUG(g_logger) << "Processer is end, and num=" << m_id
        << " .a total of " <<  m_FiberCount << " fibers have been exectued. "
        << m_swithCount << " times have been switched, " 
        << m_yieldCount  << " times have been blocked, and "
-       << m_fiberSize << " fibers have not been executed.";
+       << m_newfiberCount << " fibers have not been executed." << m_nowFiberSize;
     m_state = TaskState::stop;
 }
 
@@ -44,16 +43,13 @@ void Processer::yield(){
     fb->SwapOut();
 }
 
-// // 阻塞
-// static void Suspend();
-// // 阻塞
-// void suspend();
-// 获取执行器
+// 获取协程执行器自己
 Processer* & Processer::getThis(){
     static thread_local Processer* proc = nullptr;
     return proc; 
 }
 
+// 获取当前正在执行的协程
 Fiber::ptr Processer::getCurrentFiber(){
     return t_fiber;
 }
@@ -64,15 +60,20 @@ void Processer::addFiber(Fiber::ptr fiber){
     //MutexType::lock lock(m_mutex);
     //newQueue.push(fiber);
     //Fiber* fb = fiber.get();
+
     if(m_state == TaskState::stop ||
         m_state == TaskState::done) {
         return;        
     }
 
+    // 以无锁的方式加入协程到协程执行队列
     while(! newQueue.push(fiber)) {}
-    ++m_fiberSize;
 
+    m_newfiberCount.fetch_add(1);
+
+    // 通知执行器
     if(!isRunning()) {
+        m_notidied = true;
         this->notify();
     } else {
         m_notidied = true;
@@ -81,74 +82,78 @@ void Processer::addFiber(Fiber::ptr fiber){
 
 // 添加多个协程 
 void Processer::addFibers(std::list<Fiber::ptr>& list){
-   Fiber::ptr fb;
-    m_fiberSize += list.size();
-
+    Fiber::ptr fb;
+    
+    // 以无锁的方式添加多个协程到执行队列中
     while(list.empty()) {
         fb = list.front();
         list.pop_front();
         while(!newQueue.push(fb));
     }
 
+    m_newfiberCount.fetch_add(list.size());
+
+    // 通知执行器
     if(!isRunning()) {
+        
         this->notify();
     } else {
         m_notidied = true;
     }
 }
 
-// 调度器执行使执行器执行
-// void Processer::start(){
-//     // 线程执行这个函数
-//     execute();
-// }
-
-//  调度器通知等待的执行器
+// 调度器通知等待的执行器
 void Processer::notify(){
- MutexType::Lock lock(m_mutex);
- m_cv.notify_all();
+    MutexType::Lock lock(m_mutex);
+    m_notidied = true;
+    m_cv.notify_all();
 }
 
 // 执行器执行
 void Processer::execute(){
     getThis() = this;
-    LOG_ERROR(g_logger) << "product num=" << m_id << " is execute";
+
+    //LOG_ERROR(g_logger) << "product num=" << m_id << " is execute";
     set_hook_enable(true);
     m_state = TaskState::running;
+
     while(!m_sche->isStopping()) {
         Fiber::ptr fb;
-        runableQueue.pop(fb);
+
+        if(runableQueue.size() > 0) {
+            fb = runableQueue.front();
+            runableQueue.pop_front();
+        }
         
-        //LOG_ERROR(g_logger) << t_fiber->getFiberId() << std::endl;
         if(!fb) {
             getNewFibers();
-            continue;
-            //runableQueue.pop(t_fiber);
-            if(!fb){
-                idle(); // 
+            
+            if( runableQueue.size() <= 0 && !fb){
+                idle(); // 协程进入 空闲状态
             }
+            continue;
         }
 
         while(fb && !m_sche->isStopping()) {
             t_fiber = fb;
+            //LOG_ERROR(g_logger) << t_fiber->getFiberId() << std::endl;
+
             fb->getFiberState() = TaskState::running;
             fb->getProcesser() = this;
 
             ++m_swithCount;
             fb->SwapIn();
 
-            switch (fb->getFiberState())
-            {
+            switch (fb->getFiberState()) {
             case TaskState::running:
                 
-                while(!runableQueue.push(fb));
-
-                if(m_fiberSize > 32) {
+                //while(!runableQueue.push(fb));
+                runableQueue.push_back(fb);
+                if(m_newfiberCount > 32) {
                     getNewFibers();
                 }
                 break;
             case TaskState::block:
-                // TODO 
                 break;
             case TaskState::done:
             default:
@@ -170,35 +175,35 @@ void Processer::execute(){
 
 // gc回收
 void Processer::gc(){
-    //Fiber::ptr fb;
-    // 清楚
+    // 统一将协程在这里销毁
     while(!gcQueue.empty()){
-       // fb = gcQueue.front();
         gcQueue.pop_front();
-        //delete fb;
     }
 }
 
-// 执行器添加新的协程
+// 从新加入协程的队列中添加新的协程到可执行队列
 void Processer::getNewFibers(){
-    
-    //uint64_t size = m_fiberSize;
     unsigned long size = 0;
-    // 获取新加入的协程个数
+
+    // 获取新加入的协程个数  因为可能会有 race condition 所以需要原子的获取newQueue队列中的协程数量
     do {
-        size = m_fiberSize;
-        // 当前的 值等于 协程的个数 ,之后将这个数值设置成0
-        if(m_fiberSize.compare_exchange_strong(size, 0, std::memory_order_acquire)){
+        size = m_newfiberCount;
+        // 当前的值等于协程的个数 ,之后将这个数值设置成0
+        if(m_newfiberCount.compare_exchange_strong(size, 0, std::memory_order_acquire)){
             break;
         }
     }while(1);
+
+    // 现在的协程数量 + size
     m_nowFiberSize += size;
-    // 从newQueue队列中取出size个协程数, 因为在其他线程现实当前协程个数为0, 所以其他线程只能添加协程, 不能steal协程
-    //Fiber *fb;
+
+    // 扩展TODO  从newQueue队列中取出size个协程数, 因为在其他执行器看这个Processer当前协程个数为0, 所以其他线程只能添加协程, 不能steal协程
+
     Fiber::ptr fb;
     for(unsigned long i = 0; i < size; ++i) {
         while(newQueue.pop(fb)){    // 从 newQueue队列中获取 协程 成功
-            while(!runableQueue.push(fb)); // 加入到run队列
+            //while(!runableQueue.push(fb)); // 加入到run队列
+            runableQueue.push_back(fb);
             break;
         }
     }
@@ -213,19 +218,25 @@ Scheduler* Processer::getScheduler(){
 void Processer::idle(){
     this->gc();
 
-    // steal TODO
+    // steal TODO  从其他协程执行器偷取线程 
 
     MutexType::Lock lock(m_mutex);
     LOG_ERROR(g_logger) << "product num=" << m_id << " is waitting";
 
     if(m_notidied) {
+        // 多去检测以下有没有新的连接, 不要老是等待
         m_notidied = false;
         return;
     }
 
     m_state = TaskState::idle;
-    m_cv.wait(m_mutex);
+    
+    while(!m_notidied) {
+        m_cv.wait(m_mutex);
+    }
+    //m_notidied = false;
     m_state = TaskState::running;
+
 }
 
 }

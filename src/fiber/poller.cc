@@ -36,6 +36,7 @@ void FdContext::triggerEvent(Event event) {
     ctx.scheduler_->createFiber(ctx.cb_);
 }
 
+
 Poller::Poller(Scheduler* sche) : Timer(), m_sche(sche) {
     ASSERT_BT(pipe2(m_pipe, O_NONBLOCK) != -1);
 
@@ -248,6 +249,7 @@ void Poller::networkPoller() {
             // 处理定时器
             std::vector<std::function<void()>> cbs;
             getExecuteTask(cbs);
+
             if (!cbs.empty()) {
                 for (auto& task : cbs) {
                     if (!stopping()) m_sche->createFiber(task);
