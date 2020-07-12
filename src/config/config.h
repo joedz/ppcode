@@ -15,7 +15,6 @@
 #include "../util/util.h"
 #include "lexical_cast.h"
 
-
 namespace ppcode {
 
 class ConfigVarBase {
@@ -35,6 +34,7 @@ public:
     void setdescription(const std::string& description) {
         m_description = description;
     }
+
     const std::string& getDescription() const { return m_description; }
 
     // 将配置转换成字符串
@@ -57,7 +57,8 @@ class ConfigVar : public ConfigVarBase {
 public:
     using RWMutexType = RWMutex;
     using ptr = std::shared_ptr<ConfigVar>;
-    using on_change_cb = std::function<void (const T& old_value, const T& new_value)> ;
+    using on_change_cb =
+        std::function<void(const T& old_value, const T& new_value)>;
 
     ConfigVar(const std::string& name, const T& value,
               const std::string& description = "")
@@ -93,13 +94,15 @@ public:
     }
 
     // 返回配置的参数值的类型名称
-    virtual std::string getTypeName() const override { return GetTypeName<T>(); }
+    virtual std::string getTypeName() const override {
+        return GetTypeName<T>();
+    }
 
     T getValue() {
         RWMutexType::ReadLock lock(m_mutex);
         return m_val;
     }
-    
+
     const T& getValue() const {
         RWMutexType::ReadLock lock(m_mutex);
         return m_val;
@@ -111,8 +114,8 @@ public:
             if (v == m_val) {
                 return;
             }
-            
-            for(auto& it : m_cbs) {
+
+            for (auto& it : m_cbs) {
                 it.second(m_val, v);
             }
         }
@@ -120,7 +123,7 @@ public:
         m_val = v;
     }
 
-    // 添加 变化回调函数 
+    // 添加 变化回调函数
     uint64_t addListener(on_change_cb cb) {
         static uint64_t s_fun_id = 0;
         RWMutexType::WriteLock lock(m_mutex);
@@ -137,18 +140,18 @@ public:
     }
 
     // 获取变化回调函数
-    on_change_cb getListener(uint64_t key){
+    on_change_cb getListener(uint64_t key) {
         RWMutexType::ReadLock lock(m_mutex);
         auto it = m_cbs.find(key);
         return it == m_cbs.end() ? nullptr : it->second;
     }
 
     // 清空变化回调函数
-    void clearListener(){
+    void clearListener() {
         RWMutexType::WriteLock lock(m_mutex);
         m_cbs.clear();
     }
-    
+
 private:
     RWMutexType m_mutex;
     T m_val;
@@ -166,47 +169,50 @@ public:
     template <class T>
     static typename ConfigVar<T>::ptr Lookup(
         const std::string& name, const T& default_value,
-        const std::string& description = ""){
-            RWMutexType::WriteLock lock(GetMutex());
+        const std::string& description = "") {
+        RWMutexType::WriteLock lock(GetMutex());
 
-            auto it = GetDatas().find(name);
-            
-            if(it != GetDatas().end()) {
+        auto it = GetDatas().find(name);
+
+        if (it != GetDatas().end()) {
             // 在配置项中找到了
-                auto tmp = std::dynamic_pointer_cast<ConfigVar<T> >(it->second);
-                if(tmp) {
-                    LOG_INFO(LOG_ROOT()) << "lookup name" << name << "exists";
-                    return tmp;
-                } else {
-                    LOG_ERROR(LOG_ROOT()) << "Lookup name" << name 
-                    << " exists but type not " << it->second->toString();
-                    return nullptr;
-                }
+            auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            if (tmp) {
+                LOG_INFO(LOG_ROOT()) << "lookup name" << name << "exists";
+                return tmp;
+            } else {
+                LOG_ERROR(LOG_ROOT())
+                    << "Lookup name" << name << " exists but type not "
+                    << it->second->toString();
+                return nullptr;
             }
-            // 没有找到
-            if(name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") != std::string::npos) {
-                LOG_ERROR(LOG_ROOT()) << "Lookup name invaild" << name;
-                throw std::invalid_argument(name);
-            }
-
-            typename ConfigVar<T>::ptr value( new ConfigVar<T>(name, default_value, description));
-            
-            GetDatas()[name] = value;
-
-            LOG_INFO(LOG_ROOT()) << "description" << value->getDescription() << std::endl;
-            return value;
         }
+        // 没有找到
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._0123456789") !=
+            std::string::npos) {
+            LOG_ERROR(LOG_ROOT()) << "Lookup name invaild" << name;
+            throw std::invalid_argument(name);
+        }
+       // typename ConfigVar<T>::ptr value(
+        //    new ConfigVar<T>(name, default_value, description));
+
+
+        typename ConfigVar<T>::ptr value = std::make_shared<ConfigVar<T> >(name, default_value, description);
+        GetDatas()[name] = std::dynamic_pointer_cast<ConfigVarBase>(value);
+
+        return value;
+    }
 
     //查找配置参数
     template <class T>
     static typename ConfigVar<T>::ptr lookup(const std::string& name) {
         RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
-        if(it == GetDatas().end()) {
+        if (it == GetDatas().end()) {
             LOG_ERROR(LOG_ROOT()) << "can't find the value, name" << name;
             return nullptr;
         }
-        return std::dynamic_pointer_cast<ConfigVar<T> >(it->second);
+        return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
     // 从yaml中加载配置

@@ -1,18 +1,17 @@
-#pragma once 
+#pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "processer.h"
-#include "../util/singleton.h"
 #include "../thread.h"
+#include "../util/singleton.h"
 #include "poller.h"
-
+#include "processer.h"
 
 namespace ppcode {
-    
+
 // 协程调度器
 class Scheduler {
 public:
@@ -27,21 +26,21 @@ public:
 
     // 创建协程的接口    限制只能从这里创建协程
     void createFiber(const std::function<void()>& cb);
-    
-    // 获取网路轮询器的接口 通过这里执行网路事件监听的接口
-    Poller* getPoller()  { return m_poller;}
 
-     // 调度器执行 创建协程执行器
+    // 获取网路轮询器的接口 通过这里执行网路事件监听的接口
+    Poller* getPoller() { return m_poller; }
+
+    // 调度器执行 创建协程执行器
     void start();
 
     // 调度器是否正在停止
-    bool isStopping() const { return m_state == TaskState::stop;}
+    bool isStopping() const { return m_state == TaskState::stop; }
 
     // 获取协程执行器状态
-    TaskState getState() const { return m_state.load();}
+    TaskState getState() const { return m_state.load(); }
 
     // 设置协程执行器状态
-    void setState(TaskState state)  { m_state.store(state);}
+    void setState(TaskState state) { m_state.store(state); }
 
     // 添加协程到执行器
     void addFiber(Fiber::ptr fb);
@@ -50,12 +49,12 @@ public:
     static Scheduler* getScheduler();
 
 protected:
-    // 调度协程 
+    // 调度协程
     void dispatcherThread();
 
     // 调度器停止 运行, 并关闭所有执行器
     void stop();
-    
+
 protected:
     // 调度器名称
     std::string m_name;
@@ -80,4 +79,4 @@ protected:
     Thread::ptr m_threadPoller;
 };
 
-}
+}  // namespace ppcode

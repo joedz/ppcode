@@ -6,7 +6,31 @@
 
 namespace ppcode {
 
-std::vector<std::pair<LogLevel::Level, std::string>> LogLevel::StringLevel = 
+
+
+std::string LogLevel::ToString(const LogLevel::Level level) {
+    switch (level)
+    {
+#define XX(name)    \
+    case LogLevel::Level::name: \
+        return #name;   \
+        break;
+
+    XX(ALL);
+    XX(DEBUG);
+    XX(INFO);
+    XX(WARN);
+    XX(FATAL);
+    XX(OFF);
+#undef XX
+    default:
+        break;
+    }
+    return "OFF";
+}
+
+LogLevel::Level LogLevel::FromString(const std::string& str) {
+    static std::vector<std::pair<LogLevel::Level, std::string> > StringLevel = 
 {
     {LogLevel::Level::ALL, "ALL"},     
 	{LogLevel::Level::DEBUG, "DEBUG"},
@@ -16,15 +40,6 @@ std::vector<std::pair<LogLevel::Level, std::string>> LogLevel::StringLevel =
 	{LogLevel::Level::FATAL, "FATAL"},
     {LogLevel::Level::OFF, "OFF"}
 };
-
-std::string LogLevel::ToString(const LogLevel::Level level) {
-    if (level > LogLevel::Level::ALL || level < LogLevel::Level::OFF) {
-        return StringLevel[(int)level].second;
-    }
-    return "OFF";
-}
-
-LogLevel::Level LogLevel::FromString(const std::string& str) {
     if(str.empty()) {
         return LogLevel::Level::DEBUG;
     }

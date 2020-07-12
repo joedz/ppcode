@@ -1,21 +1,15 @@
-#pragma once 
-
-#include "fiber.h"
-#include "timer.h"
+#pragma once
 
 #include "../wraplib/epoll.h"
-namespace ppcode{
+#include "fiber.h"
+#include "timer.h"
+namespace ppcode {
 
 class Scheduler;
 
-
 struct FdContext {
     typedef Mutex MutexType;
-    enum Event {
-        NONE = 0x0,
-        READ = 0x1,
-        WRITE = 0x4 
-    };
+    enum Event { NONE = 0x0, READ = 0x1, WRITE = 0x4 };
 
     struct EventContext {
         /// 事件执行的调度器
@@ -43,7 +37,7 @@ struct FdContext {
     bool isListening = false;
 };
 
-class Poller : public Timer{
+class Poller : public Timer {
 public:
     friend class FdContext;
     using RWMutexType = RWMutex;
@@ -51,22 +45,27 @@ public:
 
     Poller(Scheduler* sche);
     virtual ~Poller();
+
 public:
-    int addEvent(int fd, FdContext::Event event, std::function<void()> cb = nullptr);
+    int addEvent(int fd, FdContext::Event event,
+                 std::function<void()> cb = nullptr);
     bool delEvent(int fd, FdContext::Event event);
     bool cancelEvent(int fd, FdContext::Event event);
     bool cancelAll(int fd);
     void networkPoller();
 
-    TaskState getState() const { return m_state.load();}
-    void setState(TaskState state)  { m_state.store(state);}
+    TaskState getState() const { return m_state.load(); }
+    void setState(TaskState state) { m_state.store(state); }
 
     void notify();
     bool stopping();
+
 private:
-    void resize(size_t size); 
+    void resize(size_t size);
+
 protected:
     void onTimerInsertedAtFront() override;
+
 private:
     Epoll m_epoll;
     int m_pipe[2];
@@ -77,4 +76,4 @@ private:
     Scheduler* m_sche;
 };
 
-} // namespace ppcode
+}  // namespace ppcode

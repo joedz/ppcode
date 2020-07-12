@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+
 #include "../thread.h"
 #include "../util/singleton.h"
 
@@ -14,28 +15,27 @@ public:
     FdCtx(int fd);
     ~FdCtx() = default;
 
-
     // 是否是socket文件描述符
-    bool isSocket() const { return m_isSocket;}
+    bool isSocket() const { return m_isSocket; }
     // 是否被close了
-    bool isClose() const { return m_isClosed;}
+    bool isClose() const { return m_isClosed; }
     // 用户设置非阻塞
-    void setUserNonblock(bool v) { m_userNonblock = v;}
+    void setUserNonblock(bool v) { m_userNonblock = v; }
     // 获取用户设置非阻塞
-    bool getUserNonblock() const { return m_userNonblock;}
+    bool getUserNonblock() const { return m_userNonblock; }
     // 用户
-    void setSysNonblock(bool v) { m_sysNonblock = v;}
+    void setSysNonblock(bool v) { m_sysNonblock = v; }
 
-    bool getSysNonblock() const { return m_sysNonblock;}
+    bool getSysNonblock() const { return m_sysNonblock; }
 
     void setTimeout(int type, uint64_t v);
 
     uint64_t getTimeout(int type);
-private:
 
+private:
     void init();
-private:
 
+private:
     /// 是否socket
     bool m_isSocket = false;
     /// 是否hook非阻塞
@@ -52,7 +52,6 @@ private:
     uint64_t m_sendTimeout = -1;
 };
 
-
 class FdManager {
 public:
     typedef RWMutex RWMutexType;
@@ -61,8 +60,8 @@ public:
 
     FdCtx::ptr get(int fd, bool auto_create = false);
 
-
     void del(int fd);
+
 private:
     /// 读写锁
     RWMutexType m_mutex;
@@ -73,5 +72,4 @@ private:
 /// 文件句柄单例
 typedef Singleton<FdManager> FdMgr;
 
-
-}
+}  // namespace ppcode

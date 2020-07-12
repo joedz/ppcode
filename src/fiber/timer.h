@@ -1,12 +1,12 @@
-#pragma once 
+#pragma once
 
-#include <memory>
-#include <vector>
-#include <set>
 #include <list>
+#include <memory>
+#include <set>
+#include <vector>
+
 #include "../thread.h"
 #include "../util/util.h"
-
 
 namespace ppcode {
 class Timer;
@@ -16,8 +16,9 @@ class TimerTask : public std::enable_shared_from_this<TimerTask> {
 public:
     friend class Timer;
     using ptr = std::shared_ptr<TimerTask>;
-    TimerTask(std::function<void()> cb, uint64_t ms, Timer* timer, bool recurring = false);
-    //TimerTask(std::shared_ptr<Fiber> fb, uint64_t ms, Timer* timer);
+    TimerTask(std::function<void()> cb, uint64_t ms, Timer* timer,
+              bool recurring = false);
+    // TimerTask(std::shared_ptr<Fiber> fb, uint64_t ms, Timer* timer);
     // 取消定时器
     bool cancel();
     // 刷新定时器执行间隔时间
@@ -28,14 +29,16 @@ public:
 
 private:
     std::function<void()> m_cb;
-    //std::weak_ptr<Fiber> m_fb;
+    // std::weak_ptr<Fiber> m_fb;
     uint64_t m_ms = 0;
-    uint64_t m_next =0;
+    uint64_t m_next = 0;
     bool m_recurring = false;
     Timer* m_timer;
+
 private:
-    struct Comparator{
-        bool operator()(const TimerTask::ptr& lhs, const TimerTask::ptr& rhs) const;
+    struct Comparator {
+        bool operator()(const TimerTask::ptr& lhs,
+                        const TimerTask::ptr& rhs) const;
     };
 };
 
@@ -44,20 +47,21 @@ public:
     friend class TimerTask;
 
     using RWMutexType = RWMutex;
-    Timer() {
-         m_previouseTime = GetCurrentMS();
-    }
+    Timer() { m_previouseTime = GetCurrentMS(); }
     virtual ~Timer() = default;
 
-    TimerTask::ptr createTimer(const std::function<void()>& cb, uint64_t ms, bool recurring = false);
-    TimerTask::ptr createCondTimer(const std::function<void()>& cb, std::weak_ptr<void> weak_cond, uint64_t ms, bool recurring = false);
+    TimerTask::ptr createTimer(const std::function<void()>& cb, uint64_t ms,
+                               bool recurring = false);
+    TimerTask::ptr createCondTimer(const std::function<void()>& cb,
+                                   std::weak_ptr<void> weak_cond, uint64_t ms,
+                                   bool recurring = false);
 
     uint64_t getNextExecuteTime();
-    void getExecuteTask(std::vector<std::function<void()> >& cbs);
+    void getExecuteTask(std::vector<std::function<void()>>& cbs);
 
     bool hasTimer();
-protected:
 
+protected:
     virtual void onTimerInsertedAtFront() = 0;
     void addTimerTask(TimerTask::ptr task, RWMutexType::WriteLock& lock);
     bool detectClockRollover(uint64_t now_ms);
@@ -69,4 +73,4 @@ protected:
     uint64_t m_previouseTime = 0;
 };
 
-}
+}  // namespace ppcode

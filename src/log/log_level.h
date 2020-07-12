@@ -23,9 +23,6 @@ public:
     };
     static std::string ToString(Level level);
     static Level FromString(const std::string& str);
-
-private:
-    static std::vector<std::pair<Level, std::string>> StringLevel;
 };
 // 通过流的方式输出 Level
 std::ostream& operator<<(std::ostream& out, const LogLevel::Level level);

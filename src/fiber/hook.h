@@ -1,18 +1,18 @@
-#pragma once 
+#pragma once
 
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <time.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/types.h>
-#include <fcntl.h>
+#include <time.h>
+#include <unistd.h>
 
 namespace ppcode {
-    bool is_hook_enable();
-    void set_hook_enable(bool flag);
-}
+bool is_hook_enable();
+void set_hook_enable(bool flag);
+}  // namespace ppcode
 
 extern "C" {
 
@@ -27,7 +27,7 @@ extern sleep_fun sleep_f;
 
 // 声明sleep_fun 类型的函数指针 sleep_f
 
-typedef int  (*usleep_fun)(useconds_t usec);
+typedef int (*usleep_fun)(useconds_t usec);
 extern usleep_fun usleep_f;
 
 typedef int (*nanosleep_fun)(const struct timespec *req, struct timespec *rem);
@@ -41,7 +41,8 @@ extern nanosleep_fun nanosleep_f;
 typedef int (*socket_fun)(int domain, int type, int protocol);
 extern socket_fun socket_f;
 
-typedef int (*connect_fun)(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+typedef int (*connect_fun)(int sockfd, const struct sockaddr *addr,
+                           socklen_t addrlen);
 extern connect_fun connect_f;
 
 typedef int (*accept_fun)(int s, struct sockaddr *addr, socklen_t *addrlen);
@@ -64,13 +65,12 @@ extern readv_fun readv_f;
 typedef ssize_t (*recv_fun)(int sockfd, void *buf, size_t len, int flags);
 extern recv_fun recv_f;
 
-typedef ssize_t (*recvfrom_fun)(int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+typedef ssize_t (*recvfrom_fun)(int sockfd, void *buf, size_t len, int flags,
+                                struct sockaddr *src_addr, socklen_t *addrlen);
 extern recvfrom_fun recvfrom_f;
 
 typedef ssize_t (*recvmsg_fun)(int sockfd, struct msghdr *msg, int flags);
 extern recvmsg_fun recvmsg_f;
-
-
 
 /*
 ****************************************************************************
@@ -87,13 +87,12 @@ extern writev_fun writev_f;
 typedef ssize_t (*send_fun)(int s, const void *msg, size_t len, int flags);
 extern send_fun send_f;
 
-typedef ssize_t (*sendto_fun)(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, socklen_t tolen);
+typedef ssize_t (*sendto_fun)(int s, const void *msg, size_t len, int flags,
+                              const struct sockaddr *to, socklen_t tolen);
 extern sendto_fun sendto_f;
 
 typedef ssize_t (*sendmsg_fun)(int s, const struct msghdr *msg, int flags);
 extern sendmsg_fun sendmsg_f;
-
-
 
 /*
 ****************************************************************************
@@ -101,19 +100,20 @@ extern sendmsg_fun sendmsg_f;
 ****************************************************************************
 */
 
-typedef int (*fcntl_fun)(int fd, int cmd, ... /* arg */ );
+typedef int (*fcntl_fun)(int fd, int cmd, ... /* arg */);
 extern fcntl_fun fcntl_f;
 
 typedef int (*ioctl_fun)(int fd, unsigned long int request, ...);
 extern ioctl_fun ioctl_f;
 
-typedef int (*getsockopt_fun)(int sockfd, int level, int optname, void *optval, socklen_t *optlen);
+typedef int (*getsockopt_fun)(int sockfd, int level, int optname, void *optval,
+                              socklen_t *optlen);
 extern getsockopt_fun getsockopt_f;
 
-typedef int (*setsockopt_fun)(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+typedef int (*setsockopt_fun)(int sockfd, int level, int optname,
+                              const void *optval, socklen_t optlen);
 extern setsockopt_fun setsockopt_f;
 
-extern int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms);
-
-
+extern int connect_with_timeout(int fd, const struct sockaddr *addr,
+                                socklen_t addrlen, uint64_t timeout_ms);
 }

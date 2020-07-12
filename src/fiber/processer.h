@@ -1,14 +1,12 @@
-#pragma once 
+#pragma once
 
-#include <memory>
+#include <atomic>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <list>
-#include <atomic>
 #include <memory>
 
 #include "../thread.h"
 #include "fiber.h"
-
 
 namespace ppcode {
 class Scheduler;
@@ -17,9 +15,8 @@ class Scheduler;
 class Processer : public std::enable_shared_from_this<Processer> {
 public:
     friend class Scheduler;
-    // 单生成者单消费者
-    using fiberQueue = boost::lockfree::spsc_queue<Fiber::ptr, 
-            boost::lockfree::capacity<128UL> >;
+
+    using fiberQueue = boost::lockfree::spsc_queue<Fiber::ptr, boost::lockfree::capacity<128UL>>;
     using ptr = std::shared_ptr<Processer>;
     using MutexType = ppcode::Mutex;
 
@@ -34,39 +31,40 @@ public:
     static Processer*& getThis();
     static Fiber::ptr getCurrentFiber();
 
-// 为调度器提供的方法
+    // 为调度器提供的方法
     // 添加协程
     void addFiber(Fiber::ptr fiber);
     // 添加多个协程  加锁
     void addFibers(std::list<Fiber::ptr>& list);
     // 执行器是否在执行协程
-    bool isRunning() { return m_state == TaskState::running;}
+    bool isRunning() { return m_state == TaskState::running; }
     // 执行器是否在等待
-    bool isWaitting() { return m_state == TaskState::idle;}
+    bool isWaitting() { return m_state == TaskState::idle; }
     // 执行器是否已经停止
-    bool isStop() { return m_state == TaskState::done;}
-    // 执行器处于阻塞执行状态 此时协程正在执行 但是由于协程处于阻塞状态,但是此时可以被其他执行器窃取协程
-    bool isBlock() { return m_state == TaskState::block;}
+    bool isStop() { return m_state == TaskState::done; }
+    // 执行器处于阻塞执行状态 此时协程正在执行
+    // 但是由于协程处于阻塞状态,但是此时可以被其他执行器窃取协程
+    bool isBlock() { return m_state == TaskState::block; }
 
-    TaskState getState() const { return m_state.load();}
-    void setState(TaskState state)  { m_state.store(state);}
+    TaskState getState() const { return m_state.load(); }
+    void setState(TaskState state) { m_state.store(state); }
 
     // 执行器中的协程个数 0
-    uint64_t filberSize() { return m_newfiberCount;}
+    uint64_t filberSize() { return m_newfiberCount; }
 
     //  调度器通知等待的执行器
-     void notify();
+    void notify();
 
-//调度器本身方法
+    //调度器本身方法
     // 执行器执行
     void execute();
     // gc回收
     void gc();
-    //void getNewFibers();
+    // void getNewFibers();
     // 获取当前调度器
-    Scheduler*  getScheduler();
+    Scheduler* getScheduler();
     // 执行器等待时的方法
-     void idle();
+    void idle();
     // 执行器添加新的协程 从 newQueue 到 runableQueue
     void getNewFibers();
 
@@ -77,7 +75,7 @@ protected:
     // 新加入的协程数量
     std::atomic<unsigned long> m_newfiberCount{0};
 
-    // 现有的可运行的协程数量   TODO 可能被其他线程访问 原子 ?? 
+    // 现有的可运行的协程数量   TODO 可能被其他线程访问 原子 ??
     unsigned long m_nowFiberSize = 0;
     // 协程阻塞的次数
     uint64_t m_yieldCount = 0;
@@ -87,7 +85,7 @@ protected:
     uint64_t m_FiberCount = 0;
     // 执行队列的选取问题 UNDO
 
-    // 协程可运行队列 
+    // 协程可运行队列
     std::list<Fiber::ptr> runableQueue;
     // 协程阻塞队列
     fiberQueue waitQueue;
@@ -106,8 +104,6 @@ protected:
 
     // 是否被唤醒
     bool m_notidied = false;
-    // 调度器器
-    // scheduler*  m_sche;
 };
 
-}
+}  // namespace ppcode

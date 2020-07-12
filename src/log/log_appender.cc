@@ -24,9 +24,7 @@ void Appender::setFormatter(LogFormatter::ptr value) {
 }
 
 void Appender::setFormatter(const std::string& value) {
-
     LogFormatter::ptr format(new LogFormatter(value));
-
     setFormatter(format);
 }
 
@@ -35,14 +33,13 @@ LogFormatter::ptr Appender::getFormatter() {
     return m_formatter;
 }
 
-//std::string Appender::getYamlString(){
-    //MutexType::lock mylock(m_mutex);
+// std::string Appender::getYamlString(){
+// MutexType::lock mylock(m_mutex);
 
-    //std::stringstream ss
-    //ss << getYamlNode();
-    //retrurn ss.str();
+// std::stringstream ss
+// ss << getYamlNode();
+// retrurn ss.str();
 //}
-
 
 /*******************************************************************
  * 输出到控制台  ConsoleAppender类
@@ -51,8 +48,9 @@ LogFormatter::ptr Appender::getFormatter() {
 void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
     if (isAppender(event->getLevel())) {
         MutexType::Lock mylock(m_mutex);
-        if(isHasFormatter()) {
-            // bug : 错误的使用 getFormatter()->format(std::cout, event); 导致死锁
+        if (isHasFormatter()) {
+            // bug : 错误的使用 getFormatter()->format(std::cout, event);
+            // 导致死锁
             m_formatter->format(std::cout, event);
         } else {
             logger->getFormatter()->format(event);
@@ -60,14 +58,13 @@ void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
     }
 }
 
-YAML::Node ConsoleAppender::getYamlNode(){
-     MutexType::Lock mylock(m_mutex);
+YAML::Node ConsoleAppender::getYamlNode() {
+    MutexType::Lock mylock(m_mutex);
     YAML::Node node(YAML::NodeType::Map);
-    if(isHasFormatter()) 
-        node["formatter"] = m_formatter->getPattern();
+    if (isHasFormatter()) node["formatter"] = m_formatter->getPattern();
     node["level"] = LogLevel::ToString(m_level);
     return node;
- }
+}
 
 /*******************************************************************
  * 输出到文件  FileAppender类
@@ -84,8 +81,9 @@ FileAppender::FileAppender(const std::string& file_name)
 void FileAppender::log(Logger::ptr logger, LogEvent::ptr event) {
     if (isAppender(event->getLevel())) {
         MutexType::Lock mylock(m_mutex);
-       if(isHasFormatter()) {
-            // bug : 错误的使用 getFormatter()->format(std::cout, event); 导致死锁
+        if (isHasFormatter()) {
+            // bug : 错误的使用 getFormatter()->format(std::cout, event);
+            // 导致死锁
             m_formatter->format(m_logFile, event);
         } else {
             logger->getFormatter()->format(event);
@@ -94,13 +92,12 @@ void FileAppender::log(Logger::ptr logger, LogEvent::ptr event) {
     }
 }
 
-YAML::Node FileAppender::getYamlNode(){
-     MutexType::Lock mylock(m_mutex);
+YAML::Node FileAppender::getYamlNode() {
+    MutexType::Lock mylock(m_mutex);
     YAML::Node node(YAML::NodeType::Map);
 
     node["path"] = m_fileName;
-    if(isHasFormatter()) 
-        node["formatter"] = m_formatter->getPattern();
+    if (isHasFormatter()) node["formatter"] = m_formatter->getPattern();
     node["level"] = LogLevel::ToString(m_level);
     return node;
 }

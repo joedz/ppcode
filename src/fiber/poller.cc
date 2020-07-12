@@ -3,9 +3,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
-#include "hook.h"
+
 #include <string>
 
+#include "hook.h"
 #include "scheduler.h"
 
 namespace ppcode {
@@ -35,7 +36,6 @@ void FdContext::triggerEvent(Event event) {
     EventContext& ctx = getContext(event);
     ctx.scheduler_->createFiber(ctx.cb_);
 }
-
 
 Poller::Poller(Scheduler* sche) : Timer(), m_sche(sche) {
     ASSERT_BT(pipe2(m_pipe, O_NONBLOCK) != -1);
@@ -321,10 +321,10 @@ void Poller::networkPoller() {
 }
 
 void Poller::onTimerInsertedAtFront() {
-     int rt = write(m_pipe[1], "w", 1);
+    int rt = write(m_pipe[1], "w", 1);
     ASSERT_BT(rt >= 1);
     // int rt = write(m_pipe.m_pipe.write_, "w", 1);
-    //notify();
+    // notify();
     // ASSERT_BT(rt == 1);
 }
 

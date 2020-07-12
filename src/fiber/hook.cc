@@ -1,33 +1,28 @@
 #include "hook.h"
+
 #include <dlfcn.h>
-#include "scheduler.h"
+
 #include <cstdarg>
+
 #include "../config/config.h"
 #include "../log.h"
 #include "fdcontext.h"
+#include "scheduler.h"
 
 
-namespace ppcode{
-
-    static thread_local bool t_hook_enable = false;
-
-    static ConfigVar<int>::ptr g_tcp_connect_timeout = Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
-
-    static Logger::ptr g_logger = LOG_ROOT();
-
-    static uint64_t s_connect_timeout = 4000;
 
 
-    void initHook();
-    bool is_hook_enable(){
-        return t_hook_enable;
-    }
-    void set_hook_enable(bool flag) {
-        t_hook_enable = flag;
-    }
+namespace ppcode {
 
-    
-} // namespace ppcode
+static thread_local bool t_hook_enable = false;
+
+static Logger::ptr g_logger = LOG_ROOT();
+static uint64_t s_connect_timeout = -1;
+
+void initHook();
+bool is_hook_enable() { return t_hook_enable; }
+void set_hook_enable(bool flag) { t_hook_enable = flag; }
+}  // namespace ppcode
 
 struct timer_info {
     int canclelled = 0;
@@ -124,28 +119,27 @@ extern "C" {
 ****************************************************************************
 */
 
-sleep_fun       sleep_f      = nullptr;
-usleep_fun      usleep_f     = nullptr;
-nanosleep_fun   nanosleep_f  = nullptr;
-socket_fun      socket_f     = nullptr;
-connect_fun     connect_f    = nullptr;
-accept_fun      accept_f     = nullptr;
-read_fun        read_f       = nullptr;
-readv_fun       readv_f      = nullptr;
-recv_fun        recv_f       = nullptr;
-recvfrom_fun    recvfrom_f   = nullptr;
-recvmsg_fun     recvmsg_f    = nullptr;
-write_fun       write_f      = nullptr;
-writev_fun      writev_f     = nullptr;
-send_fun        send_f       = nullptr;
-sendto_fun      sendto_f     = nullptr;
-sendmsg_fun     sendmsg_f    = nullptr;
-close_fun       close_f      = nullptr;
-fcntl_fun       fcntl_f      = nullptr;
-ioctl_fun       ioctl_f      = nullptr;
-getsockopt_fun  getsockopt_f = nullptr;
-setsockopt_fun  setsockopt_f = nullptr;
-
+sleep_fun sleep_f = nullptr;
+usleep_fun usleep_f = nullptr;
+nanosleep_fun nanosleep_f = nullptr;
+socket_fun socket_f = nullptr;
+connect_fun connect_f = nullptr;
+accept_fun accept_f = nullptr;
+read_fun read_f = nullptr;
+readv_fun readv_f = nullptr;
+recv_fun recv_f = nullptr;
+recvfrom_fun recvfrom_f = nullptr;
+recvmsg_fun recvmsg_f = nullptr;
+write_fun write_f = nullptr;
+writev_fun writev_f = nullptr;
+send_fun send_f = nullptr;
+sendto_fun sendto_f = nullptr;
+sendmsg_fun sendmsg_f = nullptr;
+close_fun close_f = nullptr;
+fcntl_fun fcntl_f = nullptr;
+ioctl_fun ioctl_f = nullptr;
+getsockopt_fun getsockopt_f = nullptr;
+setsockopt_fun setsockopt_f = nullptr;
 
 /*
 ****************************************************************************
@@ -204,7 +198,6 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
     ppcode::Processer::toYield();
     return 0;
 }
-
 
 /*
 ****************************************************************************
@@ -329,7 +322,6 @@ ssize_t sendmsg(int s, const struct msghdr *msg, int flags) {
                  msg, flags);
 }
 
-
 int connect_with_timeout(int sockfd, const struct sockaddr *addr,
                          socklen_t addrlen, uint64_t timeout) {
     if (sockfd < 0) {
@@ -369,8 +361,10 @@ int connect_with_timeout(int sockfd, const struct sockaddr *addr,
                     return;
                 }
                 t->canclelled = ETIMEDOUT;
-                sche->getPoller()->cancelEvent(sockfd,ppcode::FdContext::WRITE);
-            },winfo, timeout);
+                sche->getPoller()->cancelEvent(sockfd,
+                                               ppcode::FdContext::WRITE);
+            },
+            winfo, timeout);
     }
 
     // 设置sockfd的写事件
@@ -501,11 +495,11 @@ int ioctl(int fd, unsigned long int request, ...) {
     if (FIONBIO == request) {
         bool user_nonblock = !!*(int *)arg;
         ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
-        // 获取文件描述符 
+        // 获取文件描述符
         if (!fd_ctx || fd_ctx->isClose() || !fd_ctx->isSocket()) {
             return ioctl_f(fd, request, arg);
         }
-        // 设置用户非阻塞 
+        // 设置用户非阻塞
         fd_ctx->setUserNonblock(user_nonblock);
     }
     return ioctl_f(fd, request, arg);
@@ -523,7 +517,6 @@ int setsockopt(int sockfd, int level, int optname, const void *optval,
     }
     if (level == SOL_SOCKET) {
         if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) {
-
             // 获取需要设置的文件描述符
             ppcode::FdCtx::ptr fd_ctx =
                 ppcode::FdMgr::getInstance()->get(sockfd);
@@ -537,61 +530,59 @@ int setsockopt(int sockfd, int level, int optname, const void *optval,
     }
     return setsockopt_f(sockfd, level, optname, optval, optlen);
 }
-
-
 }
 
+namespace ppcode {
 
-namespace ppcode{
-
-void initHook()
-{
+void initHook() {
     static bool hasHook = false;
-    if(hasHook) {
-        return ;
+    if (hasHook) {
+        return;
     }
     static void *handle = NULL;
-    if( !handle )
-    {
+    if (!handle) {
         handle = dlopen("libc.so.6", RTLD_LAZY);
-        sleep_f         = (sleep_fun)       dlsym(handle, "sleep");
-        usleep_f        = (usleep_fun)      dlsym(handle, "usleep");
-        nanosleep_f     = (nanosleep_fun)   dlsym(handle, "nanosleep");
-        socket_f        = (socket_fun)      dlsym(handle, "socket");
-        connect_f       = (connect_fun)     dlsym(handle, "connect");
-        accept_f        = (accept_fun)      dlsym(handle, "accept");
-        read_f          = (read_fun)        dlsym(handle, "read");
-        readv_f         = (readv_fun)       dlsym(handle, "readv");
-        recv_f          = (recv_fun)        dlsym(handle, "recv");
-        recvfrom_f      = (recvfrom_fun)    dlsym(handle, "recvfrom");
-        recvmsg_f       = (recvmsg_fun)     dlsym(handle, "recvmsg");
-        write_f         = (write_fun)       dlsym(handle, "write");
-        writev_f        = (writev_fun)      dlsym(handle, "writev");
-        send_f          = (send_fun)        dlsym(handle, "send");
-        sendto_f        = (sendto_fun)      dlsym(handle, "sendto");
-        sendmsg_f       = (sendmsg_fun)     dlsym(handle, "sendmsg");
-        close_f         = (close_fun)       dlsym(handle, "close");
-        fcntl_f         = (fcntl_fun)       dlsym(handle, "fcntl");
-        ioctl_f         = (ioctl_fun)       dlsym(handle, "ioctl");
-        getsockopt_f    = (getsockopt_fun)  dlsym(handle, "getsockopt");
-        setsockopt_f    = (setsockopt_fun)  dlsym(handle, "setsockopt");
+        sleep_f = (sleep_fun)dlsym(handle, "sleep");
+        usleep_f = (usleep_fun)dlsym(handle, "usleep");
+        nanosleep_f = (nanosleep_fun)dlsym(handle, "nanosleep");
+        socket_f = (socket_fun)dlsym(handle, "socket");
+        connect_f = (connect_fun)dlsym(handle, "connect");
+        accept_f = (accept_fun)dlsym(handle, "accept");
+        read_f = (read_fun)dlsym(handle, "read");
+        readv_f = (readv_fun)dlsym(handle, "readv");
+        recv_f = (recv_fun)dlsym(handle, "recv");
+        recvfrom_f = (recvfrom_fun)dlsym(handle, "recvfrom");
+        recvmsg_f = (recvmsg_fun)dlsym(handle, "recvmsg");
+        write_f = (write_fun)dlsym(handle, "write");
+        writev_f = (writev_fun)dlsym(handle, "writev");
+        send_f = (send_fun)dlsym(handle, "send");
+        sendto_f = (sendto_fun)dlsym(handle, "sendto");
+        sendmsg_f = (sendmsg_fun)dlsym(handle, "sendmsg");
+        close_f = (close_fun)dlsym(handle, "close");
+        fcntl_f = (fcntl_fun)dlsym(handle, "fcntl");
+        ioctl_f = (ioctl_fun)dlsym(handle, "ioctl");
+        getsockopt_f = (getsockopt_fun)dlsym(handle, "getsockopt");
+        setsockopt_f = (setsockopt_fun)dlsym(handle, "setsockopt");
     }
     hasHook = true;
 }
 
 struct _HookIniter {
-_HookIniter() {
+    _HookIniter() {
         initHook();
+        static ppcode::ConfigVar<int>::ptr g_tcp_connect_timeout =
+            ppcode::Config::Lookup("tcp.connect.timeout", 5000, "tcp connect timeout");
+        s_connect_timeout = g_tcp_connect_timeout->getValue();
 
-        // s_connect_timeout = g_tcp_connect_timeout->getValue();
-        // g_tcp_connect_timeout->addListener([](const int& old_value, const int& new_value){
-        //      LOG_INFO(g_logger) << "tcp connect timeout changed from"
-        //         << old_value << " ot " << new_value;
-        //     s_connect_timeout = new_value;
-        // });
+        g_tcp_connect_timeout->addListener(
+            [](const int &old_value, const int &new_value) {
+                LOG_INFO(g_logger) << "tcp connect timeout changed from"
+                                   << old_value << " ot " << new_value;
+                s_connect_timeout = new_value;
+            });
     }
 };
 
-static _HookIniter s_hook_initer;
+ _HookIniter s_hook_initer;
 
-} // namespace ppcode
+}  // namespace ppcode
