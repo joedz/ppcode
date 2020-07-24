@@ -321,15 +321,11 @@ void Poller::networkPoller() {
 }
 
 void Poller::onTimerInsertedAtFront() {
-    int rt = write(m_pipe[1], "w", 1);
-    ASSERT_BT(rt >= 1);
-    // int rt = write(m_pipe.m_pipe.write_, "w", 1);
-    // notify();
-    // ASSERT_BT(rt == 1);
+     notify();
 }
 
 void Poller::notify() {
-    int rt = write(m_pipe[1], "w", 1);
+    int rt = write_f(m_pipe[1], "w", 1);
     //    LOG_INFO(g_logger) << rt;
     ASSERT_BT(rt >= 1);
 }

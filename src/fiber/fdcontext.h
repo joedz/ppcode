@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <vector>
-
 #include "../thread.h"
 #include "../util/singleton.h"
 
@@ -52,7 +51,7 @@ private:
     uint64_t m_sendTimeout = -1;
 };
 
-class FdManager {
+class FdManager : public Singleton<FdManager>{
 public:
     typedef RWMutex RWMutexType;
 
@@ -64,12 +63,11 @@ public:
 
 private:
     /// 读写锁
-    RWMutexType m_mutex;
+    RWMutex m_mutex;
     /// 文件句柄集合
     std::vector<FdCtx::ptr> m_datas;
 };
 
-/// 文件句柄单例
-typedef Singleton<FdManager> FdMgr;
+
 
 }  // namespace ppcode

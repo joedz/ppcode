@@ -35,7 +35,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name,
         return fun(fd, std::forward<Args>(args)...);
     }
 
-    ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
+    ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(fd);
 
     if (!fd_ctx) {
         return fun(fd, std::forward<Args>(args)...);
@@ -66,6 +66,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name,
             // 资源不满足条件
             ppcode::Scheduler *sche = ppcode::Scheduler::getScheduler();
             // ppcode::Fiber::ptr fb = ppcode::Processer::getCurrentFiber();
+            ppcode::Fiber::ptr fb = ppcode::Processer::getCurrentFiber();
 
             ppcode ::TimerTask::ptr timerTask;
             std::weak_ptr<timer_info> winfo(tinfo);
@@ -86,7 +87,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char *hook_fun_name,
             }
             // 添加事件监听
             int rt = sche->getPoller()->addEvent(
-                fd, (ppcode::FdContext::Event)event);
+                fd, (ppcode::FdContext::Event)event, std::bind(&ppcode::Scheduler::addFiber, sche, fb));
             if (rt) {
                 // epoll_ctl添加错误
                 if (timerTask) {
@@ -214,8 +215,9 @@ int socket(int domain, int type, int protocol) {
     if (fd == -1) {
         return fd;
     }
-
-    ppcode::FdMgr::getInstance()->get(fd, true);
+    ppcode::FdManager::getInstance()->get(fd, true);
+    
+    //ppcode::FdManager::getInstance()->get(fd, true);
     return fd;
 }
 
@@ -236,7 +238,7 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     int fd = do_io(sockfd, accept_f, "accept", ppcode::FdContext::READ,
                    SO_RCVTIMEO, addr, addrlen);
     if (fd >= 0) {
-        ppcode::FdMgr::getInstance()->get(fd, true);
+        ppcode::FdManager::getInstance()->get(fd, true);
     }
     return fd;
 }
@@ -247,13 +249,13 @@ int close(int fd) {
         return close_f(fd);
     }
 
-    ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
+    ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(fd);
     if (fd_ctx) {
         ppcode::Scheduler *sche = ppcode::Scheduler::getScheduler();
         if (sche) {
             sche->getPoller()->cancelAll(fd);
         }
-        ppcode::FdMgr::getInstance()->del(fd);
+        ppcode::FdManager::getInstance()->del(fd);
     }
 
     return close_f(fd);
@@ -328,7 +330,7 @@ int connect_with_timeout(int sockfd, const struct sockaddr *addr,
         return -1;
     }
 
-    ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(sockfd);
+    ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(sockfd);
 
     if (!fd_ctx || fd_ctx->isClose()) {
         errno = EBADF;
@@ -350,8 +352,9 @@ int connect_with_timeout(int sockfd, const struct sockaddr *addr,
     ppcode::Scheduler *sche = ppcode::Scheduler::getScheduler();
     ppcode::TimerTask::ptr timerTask;
     std::shared_ptr<timer_info> tinfo(new timer_info);
-    std::weak_ptr<timer_info> winfo(tinfo);
-
+    std::weak_ptr<timer_info> winfo(tinfo);    
+    ppcode::Fiber::ptr fb = ppcode::Processer::getCurrentFiber();
+    
     if (timeout != (uint64_t)-1) {
         //创建条件定时器
         timerTask = sche->getPoller()->createCondTimer(
@@ -368,7 +371,8 @@ int connect_with_timeout(int sockfd, const struct sockaddr *addr,
     }
 
     // 设置sockfd的写事件
-    int rt = sche->getPoller()->addEvent(sockfd, ppcode::FdContext::WRITE);
+    int rt = sche->getPoller()->addEvent(sockfd, ppcode::FdContext::WRITE,
+                        std::bind(&ppcode::Scheduler::addFiber, sche, fb));
     if (rt == 0) {
         ppcode::Processer::toYield();
         if (timerTask) {
@@ -378,7 +382,7 @@ int connect_with_timeout(int sockfd, const struct sockaddr *addr,
         if (tinfo->canclelled) {
             // 这里已经触发了条件定时器, 那么代表连接超时
             errno = tinfo->canclelled;
-            return -1;
+            //return -1;
         }
     } else {
         // epoll_ctl 失败 取消定时器
@@ -415,7 +419,7 @@ int fcntl(int fd, int cmd, ... /* arg */) {
         case F_SETFL: {
             int arg = va_arg(va, int);
             va_end(va);
-            ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
+            ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(fd);
             if (!fd_ctx || fd_ctx->isClose() || !fd_ctx->isSocket()) {
                 return fcntl_f(fd, cmd, arg);
             }
@@ -431,7 +435,7 @@ int fcntl(int fd, int cmd, ... /* arg */) {
             va_end(va);
             int arg = fcntl_f(fd, cmd);
 
-            ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
+            ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(fd);
             if (!fd_ctx || fd_ctx->isClose() || !fd_ctx->isSocket()) {
                 return arg;
             }
@@ -494,7 +498,7 @@ int ioctl(int fd, unsigned long int request, ...) {
 
     if (FIONBIO == request) {
         bool user_nonblock = !!*(int *)arg;
-        ppcode::FdCtx::ptr fd_ctx = ppcode::FdMgr::getInstance()->get(fd);
+        ppcode::FdCtx::ptr fd_ctx = ppcode::FdManager::getInstance()->get(fd);
         // 获取文件描述符
         if (!fd_ctx || fd_ctx->isClose() || !fd_ctx->isSocket()) {
             return ioctl_f(fd, request, arg);
@@ -519,7 +523,7 @@ int setsockopt(int sockfd, int level, int optname, const void *optval,
         if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) {
             // 获取需要设置的文件描述符
             ppcode::FdCtx::ptr fd_ctx =
-                ppcode::FdMgr::getInstance()->get(sockfd);
+                ppcode::FdManager::getInstance()->get(sockfd);
             if (fd_ctx) {
                 // 记录文件描述设置的超时时间
                 const timeval *v = (const timeval *)optval;

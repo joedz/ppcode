@@ -88,6 +88,7 @@ ppcode_add_executable(test_config "test/test_config.cc" ppcode "${LIBS}")
 #ppcode_add_executable(test_coroutines "test/test_coroutines.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_sche "test/test_sche.cc" ppcode "${LIBS}")
 ppcode_add_executable(test_hook "test/test_hook.cc" ppcode "${LIBS}")
+ppcode_add_executable(test_network "test/test_network.cc" ppcode "${LIBS}")
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

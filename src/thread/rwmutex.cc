@@ -11,7 +11,7 @@ RWMutex::RWMutex() {
     int rt = pthread_rwlock_init(&m_rwmutex, nullptr);
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_init failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_init failed");
+//        throw std::logic_error("pthread_rwlock_init failed");
     }
 }
 
@@ -26,7 +26,7 @@ void RWMutex::rdlock() {
     int rt = pthread_rwlock_rdlock(&m_rwmutex);
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_rdlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_rdlock failed");
+ //       throw std::logic_error("pthread_rwlock_rdlock failed");
     }
 }
 
@@ -34,7 +34,7 @@ void RWMutex::wrlock() {
     int rt = pthread_rwlock_wrlock(&m_rwmutex);
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_wrlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_wrlock failed");
+//        throw std::logic_error("pthread_rwlock_wrlock failed");
     }
 }
 
@@ -48,7 +48,7 @@ bool RWMutex::try_rdlock() {
     }
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_tryrdlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_tryrdlock failed");
+ //       throw std::logic_error("pthread_rwlock_tryrdlock failed");
     }
     return false;
 }
@@ -62,7 +62,7 @@ bool RWMutex::try_wrlock() {
     }
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_trywrlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_trywrlock failed");
+ //       throw std::logic_error("pthread_rwlock_trywrlock failed");
     }
     return false;
 }
@@ -71,7 +71,7 @@ void RWMutex::unlock() {
     int rt = pthread_rwlock_unlock(&m_rwmutex);
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_unlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_unlock failed");
+ //       throw std::logic_error("pthread_rwlock_unlock failed");
     }
 }
 
@@ -89,7 +89,7 @@ bool RWMutex::time_rdlock(int sec, int msec) {
     }
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_timedrdlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_timedrdlock failed");
+ //       throw std::logic_error("pthread_rwlock_timedrdlock failed");
     }
     return false;
 }
@@ -107,7 +107,7 @@ bool RWMutex::time_wrlock(int sec, int msec) {
     }
     if (rt) {
         LOG_ERROR(g_logger) << "pthread_rwlock_timedwrlock failed, rt=" << rt;
-        throw std::logic_error("pthread_rwlock_timedwrlock failed");
+ //       throw std::logic_error("pthread_rwlock_timedwrlock failed");
     }
     return false;
 }

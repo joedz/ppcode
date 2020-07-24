@@ -64,7 +64,7 @@ void Fiber::run() {
         m_fn();
     } catch (...) {
         LOG_ERROR(g_logger) << "An exception was caught";
-        m_eptr = std::current_exception();
+      //  m_eptr = std::current_exception();
     }
 
     m_state = TaskState::done;

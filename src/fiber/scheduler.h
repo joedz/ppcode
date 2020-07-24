@@ -68,9 +68,9 @@ protected:
     // 调度器停止标识
     std::atomic<TaskState> m_state;
     // 执行器数量
-    uint32_t m_processerNumber;
+    uint32_t m_processerNumber = 0;
     // 统计协程数量
-    uint64_t m_fiberNumber;
+    uint64_t m_fiberNumber = 0;
     // 上一次活跃的执行器数量
     volatile uint32_t m_lastActiveProcessers;
     // 调度线程句柄

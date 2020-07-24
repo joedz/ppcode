@@ -69,7 +69,7 @@ int main(){
     //std::cout << fd << std::endl;
     //sche->getPoller()->createTimer(fun1, 2, true);
    
-    //sche->createFiber(test_sleep);
+    sche->createFiber(test_sleep);
 
     sleep_f(2);
 
@@ -77,7 +77,7 @@ int main(){
     //while(i--)
     //sche->createFiber(fun1);
 
-    //getchar();
+    getchar();
     //sleep(10000);
 
 }

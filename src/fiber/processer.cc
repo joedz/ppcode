@@ -221,7 +221,7 @@ void Processer::idle(){
     // steal TODO  从其他协程执行器偷取线程 
 
     MutexType::Lock lock(m_mutex);
-    LOG_ERROR(g_logger) << "product num=" << m_id << " is waitting";
+   // LOG_ERROR(g_logger) << "product num=" << m_id << " is waitting";
 
     if(m_notidied) {
         // 多去检测以下有没有新的连接, 不要老是等待
