@@ -7,9 +7,6 @@
 
 namespace ppcode {
 
-/*******************************************************************
- * 父类 Appender
- *******************************************************************/
 Appender::Appender() : m_hasFormatter(false) {}
 
 void Appender::setFormatter(LogFormatter::ptr value) {
@@ -46,11 +43,10 @@ LogFormatter::ptr Appender::getFormatter() {
  *******************************************************************/
 
 void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
+    Appender::log(logger, event);
     if (isAppender(event->getLevel())) {
         MutexType::Lock mylock(m_mutex);
         if (isHasFormatter()) {
-            // bug : 错误的使用 getFormatter()->format(std::cout, event);
-            // 导致死锁
             m_formatter->format(std::cout, event);
         } else {
             logger->getFormatter()->format(event);
@@ -61,7 +57,9 @@ void ConsoleAppender::log(Logger::ptr logger, LogEvent::ptr event) {
 YAML::Node ConsoleAppender::getYamlNode() {
     MutexType::Lock mylock(m_mutex);
     YAML::Node node(YAML::NodeType::Map);
-    if (isHasFormatter()) node["formatter"] = m_formatter->getPattern();
+    if (isHasFormatter()) {
+        node["formatter"] = m_formatter->getPattern();
+    } 
     node["level"] = LogLevel::ToString(m_level);
     return node;
 }
@@ -79,16 +77,14 @@ FileAppender::FileAppender(const std::string& file_name)
 }
 
 void FileAppender::log(Logger::ptr logger, LogEvent::ptr event) {
+    Appender::log(logger, event);
     if (isAppender(event->getLevel())) {
         MutexType::Lock mylock(m_mutex);
         if (isHasFormatter()) {
-            // bug : 错误的使用 getFormatter()->format(std::cout, event);
-            // 导致死锁
             m_formatter->format(m_logFile, event);
         } else {
             logger->getFormatter()->format(event);
         }
-        // getFormatter()->format(m_logFile, event);
     }
 }
 
@@ -102,14 +98,10 @@ YAML::Node FileAppender::getYamlNode() {
     return node;
 }
 
-// void FileAppender::append(const std::string& line){
-//     // mutex
-//     if(!m_logFile.is_open()) {
-//         //std::cout << "FileAppender: log file is close" << std::endl;
-//         m_logFile.open(m_fileName, std::ios::app | std::ios::out);
-//     }
-//     m_logFile.write(line.c_str(), line.size());
-//     m_logFile.flush();
-// }
+FileAppender::~FileAppender() {
+    if (m_logFile.is_open()) {
+        m_logFile.close();
+    }
+}
 
 }  // namespace ppcode

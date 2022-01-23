@@ -106,7 +106,6 @@ public:
     std::string getName() { return m_name; }
 
 
-
 public:
     // 设置本线程名称
     static void SetThreadName(const std::string& name);

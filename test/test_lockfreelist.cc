@@ -120,9 +120,9 @@ void test_one_thread(){
 
 ppcode::LockFreeList<int> queue(100003);
 
-const int iterations = 100000000;
-const int producer_thread_count = 1;
-const int consumer_thread_count = 1;
+const int iterations = 1000000;
+const int producer_thread_count = 2;
+const int consumer_thread_count = 3;
 
 
 void producer(void) {
@@ -160,7 +160,7 @@ void consumer(void) {
 
 void test_thread() {
     using namespace std;
-    cout << "boost::lockfree::queueis";
+    cout << "boost::lockfree::queueis" << endl;
     //if (!queue.is_lock_free()) cout << "not";
     cout << "lockfree" << endl;
 

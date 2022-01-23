@@ -1,34 +1,41 @@
 #pragma once
-#include <sys/time.h>
 
+#include <sys/time.h>
 #include <cerrno>
 #include <ctime>
 #include <memory>
 
 #include "log_level.h"
 
-
-
 namespace ppcode {
 
 class Logger;
-
+/**
+ * @brief 日志事件的封装
+ * 将要写的日志，填充到LogEvent中。填充完毕之后，写入到对应的logger中
+ * 
+ */
 class LogEvent {
 public:
     using ptr = std::shared_ptr<LogEvent>;
     LogEvent() = default;
-    LogEvent(std::shared_ptr<Logger> logger, time_t vtime,
-             const std::string& fileName, uint32_t line, uint32_t threadId,
-             uint32_t fiberId, const std::string& threadName,
+
+    LogEvent(std::shared_ptr<Logger> logger,
+             time_t vtime,
+             const std::string& fileName,
+             uint32_t line,
+             uint32_t threadId,
+             uint32_t fiberId,
+             const std::string& threadName,
              LogLevel::Level level)
         : m_logger(logger),          // 日志器
-          m_time(vtime),             //日志时间
-          m_fileName(fileName),      //文件名称
-          m_line(line),              //行号
-          m_threadId(threadId),      //线程id
-          m_fiberId(fiberId),        //协程id
-          m_threadName(threadName),  //线程名
-          m_level(level) {}          //日志级别
+          m_time(vtime),             // 日志时间
+          m_fileName(fileName),      // 文件名称
+          m_line(line),              // 行号
+          m_threadId(threadId),      // 线程id
+          m_fiberId(fiberId),        // 协程id
+          m_threadName(threadName),  // 线程名
+          m_level(level) {}          // 日志级别
 
     ~LogEvent() = default;
 
@@ -102,4 +109,5 @@ public:
 
     std::string getContent() const { return m_ss.str(); }
 };
+
 }  // namespace ppcode

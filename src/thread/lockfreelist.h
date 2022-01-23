@@ -220,6 +220,7 @@ private:
             if (atomic_cas2(&m_head.val, old_head.val, new_node.val)) break;
         } while (1);
     }
+    
     // 初始化链表
     void InitInternalNodeList() {
         assert(m_freeList == nullptr);

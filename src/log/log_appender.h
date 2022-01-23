@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include "../thread/spinlock.h"
+#include "thread/spinlock.h"
 #include "log_event.h"
 #include "log_format.h"
 #include "log_level.h"
@@ -14,7 +14,14 @@
 namespace ppcode {
 class Logger;
 
-// @brief 日志输出方式的接口类
+/**
+ * @brief 日志输出器的接口类
+ * LogAppender可以拥有自己的LogFormat。一个日志器，可以对应多个LogAppender。
+ * 也就是说写一条日志，可以落到多个输出，并且每个输出的格式都可以不一样。
+ * Appender有单独的日志级别,可以自定义不同级别的日志，输出到不同的Appender，
+ * 常用于将错误日志统一输出到一个地方。
+ * 目前实现了输出到控制台(StdoutLogAppender)、输出到文件(FileLogAppender)
+ */
 class Appender {
 public:
     // 局部锁
@@ -24,14 +31,32 @@ public:
     Appender();
     virtual ~Appender(){};
 
-    //@brief 模板方法 写日志
-    virtual void log(std::shared_ptr<Logger> logger, LogEvent::ptr event) = 0;
+    /**
+     * @brief 虚函数 日志输出 
+     * 
+     * @param logger 日志器
+     * @param event 日志内容
+     */
+    virtual void log(std::shared_ptr<Logger> logger, LogEvent::ptr event) {
+        if (!event->getLogger()) {
+            event->setLogger(logger);
+        }
+    }
+    
+    /**
+     * @brief 获取YAML模块节点
+     * 
+     * @return YAML::Node 
+     */
     virtual YAML::Node getYamlNode() = 0;
 
-    // 设置或获取 格式化器
+    /**
+     * @brief 设置日志格式化器
+     */
     void setFormatter(LogFormatter::ptr value);
-    LogFormatter::ptr getFormatter();
     void setFormatter(const std::string& value);
+
+    LogFormatter::ptr getFormatter();
     // std::string getYamlString();
 
     // 设置 输出器的日志级别
@@ -71,16 +96,15 @@ class FileAppender : public Appender {
 public:
     using ptr = std::shared_ptr<FileAppender>;
     FileAppender(const std::string& file_name);
-    virtual ~FileAppender() = default;
+    const std::string getPath() const { return m_fileName; }
+
+    virtual ~FileAppender();
     virtual void log(std::shared_ptr<Logger> logger,
                      LogEvent::ptr event) override;
-
-    const std::string getPath() const { return m_fileName; }
     virtual YAML::Node getYamlNode() override;
-
 private:
-    std::ofstream m_logFile;
-    std::string m_fileName;  // 文件的路径名
+    std::ofstream m_logFile;    // 文件流
+    std::string m_fileName;     // 文件的路径名
 };
 
 }  // namespace ppcode

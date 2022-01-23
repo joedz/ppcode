@@ -8,7 +8,13 @@ namespace ppcode {
 
 static Logger::ptr g_loger = LOG_ROOT();
 
-// 静态函数 加载 配置项
+/**
+ * @brief 加载 配置项
+ * 
+ * @param prefix 配置项
+ * @param node 配置的节点
+ * @param output 所有的配置，输出参数
+ */
 static void S_listYamlNode(
     const std::string& prefix, const YAML::Node& node,
     std::list<std::pair<std::string, YAML::Node>>& output) {
@@ -59,14 +65,12 @@ void Config::LoadFromYaml(const YAML::Node& rootNode) {
     }
 }
 
-// 查找配置参数 ,返回配置参数的基类
 ConfigVarBase::ptr Config::LookupBase(const std::string& name) {
     RWMutexType::ReadLock lock(Config::GetMutex());
     auto it = GetDatas().find(name);
     return it == GetDatas().end() ? nullptr : it->second;
 }
 
-// 便利配置模块中所有配置项
 void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
     RWMutexType::ReadLock lock(Config::GetMutex());
 
@@ -75,4 +79,5 @@ void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
         cb(it->second);
     }
 }
+
 }  // namespace ppcode

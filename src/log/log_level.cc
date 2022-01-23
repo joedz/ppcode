@@ -1,12 +1,7 @@
+#include "log_level.h"
 #include <string.h>
 
-#include "log_level.h"
-
-
-
 namespace ppcode {
-
-
 
 std::string LogLevel::ToString(const LogLevel::Level level) {
     switch (level)
@@ -20,6 +15,7 @@ std::string LogLevel::ToString(const LogLevel::Level level) {
     XX(DEBUG);
     XX(INFO);
     XX(WARN);
+    XX(ERROR);
     XX(FATAL);
     XX(OFF);
 #undef XX

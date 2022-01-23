@@ -17,8 +17,7 @@ template <class Origin, class Target>
 class LexicalCast {
 public:
     Target operator()(const Origin& value) {
-        // boost 库中的字符串与整数/浮点数之间的字面值转换函数 资料
-
+        // boost 库中的字符串与整数/浮点数之间的字面值转换函数
         return boost::lexical_cast<Target>(value);
     }
 };
@@ -56,8 +55,6 @@ public:
         return ss.str();
     }
 };
-
-// TODO
 
 // string --> list<T>
 template <class T>

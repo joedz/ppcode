@@ -1,5 +1,5 @@
-#include "../src/log.h"
-#include "../src/config/config.h"
+#include "log.h"
+#include "config/config.h"
 
 #include <string>
 
@@ -10,7 +10,6 @@ ppcode::ConfigVar<int>::ptr g_var_int =
 
 void test_config() {
     std::cout << g_var_int->getValue() << std::endl;
-
     std::cout << g_var_int->getTypeName() << std::endl;
     std::cout << g_var_int->getName() << std::endl;
     std::cout << g_var_int->getDescription() << std::endl;
@@ -27,7 +26,6 @@ void test_config() {
     g_var_int->setValue(1000);
 
     std::cout << g_var_int->getValue() << std::endl;
-
     std::cout << g_var_int->getTypeName() << std::endl;
     std::cout << g_var_int->getName() << std::endl;
     std::cout << g_var_int->getDescription() << std::endl;
@@ -186,11 +184,10 @@ void test_get_set_value() {
 
 
 int main() { 
-    //test_config(); 
-   // test_more_type();
-   // test_load_config_file();
-    //test_config_log();
-
-
+    // test_config(); 
+    // test_more_type();
+    // test_load_config_file();
+    test_config_log();
     test_get_set_value();
+
 }

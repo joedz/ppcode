@@ -48,6 +48,13 @@ namespace ppcode {
 //         return appender;
 //     }
 // };
+
+
+/**
+ * @brief 字符串解析成文件日志输出器
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<std::string, FileAppender> {
 public:
@@ -60,14 +67,12 @@ public:
         if (node["path"].IsScalar()) {
             path = node["path"].as<std::string>();
         } else {
-            std::cout << "fileappender config is error, name is null"
-                      << std::endl;
+            std::cout << "fileappender config is error, name is null" << std::endl;
             throw std::logic_error("name is null");
         }
         appender.reset(new FileAppender(path));
 
-        LogLevel::Level level = LogLevel::FromString(
-            node["level"].IsScalar() ? node["level"].as<std::string>() : "");
+        LogLevel::Level level = LogLevel::FromString(node["level"].IsScalar() ? node["level"].as<std::string>() : "");
         appender->setLevel(level);
 
         if (node["formatter"].IsScalar()) {
@@ -77,7 +82,11 @@ public:
     }
 };
 
-// 将日志输出低转换成日志格式
+/**
+ * @brief 将文件日志输出器转换为配置字符串
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<FileAppender, std::string> {
 public:
@@ -88,16 +97,19 @@ public:
     }
 };
 
+/**
+ * @brief 字符串解析成控制台日志输出器
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<std::string, ConsoleAppender> {
 public:
     ConsoleAppender::ptr operator()(const std::string& value) {
         YAML::Node node = YAML::Load(value);
-        //std::cout << "appender=" <<value << std::endl;
         ConsoleAppender::ptr appender(new ConsoleAppender);
 
-        LogLevel::Level level = LogLevel::FromString(
-            node["level"].IsScalar() ? node["level"].as<std::string>() : "");
+        LogLevel::Level level = LogLevel::FromString(node["level"].IsScalar() ? node["level"].as<std::string>() : "");
         appender->setLevel(level);
 
         if (node["formatter"].IsScalar()) {
@@ -107,7 +119,11 @@ public:
     }
 };
 
-// 将日志输出低转换成日志格式
+/**
+ * @brief 将控制台日志输出器转换为配置字符串
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<ConsoleAppender, std::string> {
 public:
@@ -118,7 +134,11 @@ public:
     }
 };
 
-// 模板特例化 将 YAML::string 转换成 logger日志器
+/**
+ * @brief 将 YAML::string 转换成 logger日志器
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<std::string, Logger> {
 public:
@@ -153,21 +173,11 @@ public:
                 std::string str = appenders[i]["type"].as<std::string>();
                 
                 if (str == "fileappender") {
-                    // appender = std::dynamic_pointer_cast<Appender>(
-                    // LexicalCast<std::string, FileAppender>(
-                    //     appenders[i].as<std::string>()
-                    //     ));
-                    std::cout << "----------" << std::endl;
-                    FileAppender::ptr fappender = LexicalCast<std::string, FileAppender>()(ss.str());
-                    appender = std::dynamic_pointer_cast<Appender>(fappender);
-                } else if (str ==
-                           "consoleappender") {
-                    // appender =
-                    // std::dynamic_pointer_cast<Appender>(LexicalCast<std::string,
-                    // ConsoleAppender>(
-                    //     appenders[i].as<std::string>()));
-                    ConsoleAppender::ptr cappender = LexicalCast<std::string, ConsoleAppender>()(ss.str());
-                    appender = std::dynamic_pointer_cast<Appender>(cappender);
+                    FileAppender::ptr fAppender = LexicalCast<std::string, FileAppender>()(ss.str());
+                    appender = std::dynamic_pointer_cast<Appender>(fAppender);
+                } else if (str == "consoleappender") {
+                    ConsoleAppender::ptr cAppender = LexicalCast<std::string, ConsoleAppender>()(ss.str());
+                    appender = std::dynamic_pointer_cast<Appender>(cAppender);
                 }
                 logger->addAppender(appender);
             }
@@ -176,6 +186,11 @@ public:
     }
 };
 
+/**
+ * @brief 将Logger 转换成 YAML::string
+ * 
+ * @tparam  
+ */
 template <>
 class LexicalCast<Logger, std::string> {
 public:

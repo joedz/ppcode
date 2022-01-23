@@ -22,7 +22,6 @@ pid_t GetThreadId() { return syscall(SYS_gettid); }
 // 获取协程id
 uint32_t GetFiberId() { return 0; }
 
-
 //获取系统中一页的大小
 size_t GetPageSize() { return syscall(_SC_PAGE_SIZE); }
 

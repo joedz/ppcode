@@ -1,0 +1,4 @@
+22-01-23 18:00:52	334 main fiber=44	[root] [DEBUG]	/root/ppcode/test/test_log.cc:96	  hello log --
+22-01-23 18:01:11	334 main fiber=44	[root] [DEBUG]	/root/ppcode/test/test_log.cc:72	  hello log
+22-01-23 18:01:11	334 main fiber=44	[root] [DEBUG]	/root/ppcode/test/test_log.cc:72	  hello logwww hhhh
+22-01-23 18:01:11	334 main fiber=44	[root] [DEBUG]	/root/ppcode/test/test_log.cc:96	  hello log --

@@ -14,6 +14,11 @@ namespace ppcode
             static T s_singleton;
             return &s_singleton;
         }
+    protected:
+        Singleton() = default;
+    private:
+        Singleton(const Singleton &) = delete;
+        Singleton &operator=(const Singleton &) = delete;
     };
 
     // 单例智能指针

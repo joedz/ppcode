@@ -11,7 +11,6 @@
 namespace ppcode {
 //默认日志格式
 
-
 // 存储时间的最大缓冲区长度
 const static uint32_t s_time_max_buffer_size = 64;
 
@@ -193,7 +192,6 @@ public:
  * @param[in] pattern 格式模板
  * @details
  */
-
 LogFormatter::LogFormatter(const std::string& pattern) {
     if (!pattern.empty()) {
         setPattern(pattern);
@@ -306,7 +304,11 @@ void LogFormatter::addEventItem(LogFormatterItem::ptr item) {
 }
 
 void LogFormatter::cleanEventItem(LogFormatterItem::ptr item) {
-    m_items.clear();
+    for (auto it = m_items.begin(); it != m_items.end(); ++it) {
+        if (*it = item) {
+            m_items.erase(it);
+        }
+    }
 }
 
 std::string LogFormatter::format(LogEvent::ptr event) {
